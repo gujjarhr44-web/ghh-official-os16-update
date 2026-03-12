@@ -1,0 +1,97 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Inter:wght@300;400;700;900&display=swap');
+
+:root {
+    --accent: #007AFF;
+    --radius: 42px;
+    --blur: 40px;
+    --neon: 0 0 15px rgba(0, 122, 255, 0.4);
+    --glass: rgba(255, 255, 255, 0.65);
+    --text: #000;
+}
+
+/* Dark Mode Variables */
+body.dark-mode {
+    --glass: rgba(20, 20, 20, 0.8);
+    --text: #fff;
+    background: #000;
+}
+
+/* OS Theme Specifics */
+body.theme-gaming { --accent: #ff003c; --radius: 8px; --neon: 0 0 25px #ff003c; }
+body.theme-gaming.dark-mode { --accent: #00ff41; --neon: 0 0 35px #00ff41; }
+body.theme-nothing { --accent: #000; --radius: 45px; --text: #000; }
+body.theme-nothing.dark-mode { --accent: #fff; --text: #fff; }
+
+body {
+    margin: 0;
+    transition: background 0.5s ease;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+/* Background Blobs */
+.liquid-blob {
+    position: absolute; width: 600px; height: 600px; border-radius: 50%;
+    filter: blur(120px); opacity: 0.2; z-index: -1;
+    animation: flow 25s infinite alternate ease-in-out;
+}
+.blob-1 { background: #007AFF; top: -10%; left: -10%; }
+.blob-2 { background: #eb0029; bottom: -5%; right: -5%; animation-delay: -5s; }
+
+@keyframes flow { 0% { transform: translate(0,0) rotate(0deg); } 100% { transform: translate(100px, 100px) rotate(180deg); } }
+
+/* Frozen Glass UI */
+.frozen-glass {
+    background: var(--glass);
+    backdrop-filter: blur(var(--blur)) saturate(200%);
+    -webkit-backdrop-filter: blur(var(--blur)) saturate(200%);
+    border: 1.5px solid rgba(255, 255, 255, 0.3);
+    outline: 1.5px solid var(--accent);
+    box-shadow: var(--neon);
+    border-radius: var(--radius);
+}
+
+/* Dynamic Island */
+.dynamic-island-container {
+    position: fixed; top: 15px; left: 50%; transform: translateX(-50%); z-index: 2000;
+}
+.dynamic-island {
+    height: 38px; width: 140px; background: #000; border-radius: 20px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 1px solid rgba(255,255,255,0.2);
+}
+.dynamic-island:hover { width: 280px; height: 65px; }
+.island-content { color: white; font-size: 10px; font-weight: 900; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
+.status-dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: pulse 2s infinite; }
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+
+/* Controls */
+.nav-controls-left { position: fixed; top: 20px; left: 20px; display: flex; gap: 15px; z-index: 1000; }
+.nav-controls-right { position: fixed; top: 20px; right: 20px; z-index: 1000; }
+
+.os-menu {
+    position: fixed; top: 85px; right: 20px; width: 250px; padding: 20px; z-index: 1000;
+}
+.os-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+.os-opt { padding: 10px; background: rgba(0,0,0,0.05); border-radius: 12px; font-size: 11px; font-weight: 900; text-transform: uppercase; }
+
+/* Login Elements */
+.login-wrapper { text-align: center; width: 100%; max-width: 400px; padding: 20px; z-index: 10; }
+.site-heading { font-size: 4rem; font-weight: 900; margin-bottom: 30px; letter-spacing: -3px; }
+.login-card { padding: 40px; text-align: left; }
+.input-group label { display: block; font-size: 10px; font-weight: 900; text-transform: uppercase; opacity: 0.4; margin-bottom: 5px; }
+.input-group input { width: 100%; padding: 15px; background: rgba(0,0,0,0.05); border-radius: 15px; margin-bottom: 20px; outline: none; }
+.submit-btn { width: 100%; padding: 20px; background: var(--accent); color: white; border-radius: 20px; font-weight: 900; text-transform: uppercase; margin-top: 10px; }
+
+/* Transition */
+.transition-overlay {
+    position: fixed; inset: 0; background: #000; z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.decoding-text { font-size: 4rem; font-weight: 900; color: white; font-style: italic; animation: glitch 1s infinite; }
+
+@keyframes glitch { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+.hidden { display: none; }
