@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GHH Vault - Repository</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="gallery-style.css">
+</head>
+<body class="theme-ios">
+    <div class="fixed-bg"></div>
+
+    <header class="sticky-header frozen-glass">
+        <!-- Dashboard Widget -->
+        <div class="dashboard-row">
+            <span>🔋 98%</span>
+            <span>⚡ Performance: Turbo</span>
+            <span>📡 Latency: 4ms</span>
+        </div>
+
+        <div class="header-main">
+            <div class="header-left">
+                <button onclick="window.location.href='index.html'" class="back-btn">✕</button>
+                <div class="title-stack">
+                    <h1 class="header-title">The Vault</h1>
+                    <p class="header-sub">Nodes: <span id="nodeCount">40</span></p>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <button id="vaultBtn" class="vault-btn">🔒 Private Vault</button>
+                <button id="osMenuBtn" class="layers-btn">Layers</button>
+            </div>
+        </div>
+
+        <!-- Filter Chips -->
+        <div class="filter-row no-scrollbar">
+            <button class="filter-chip active" data-cat="All">All Moments</button>
+            <button class="filter-chip" data-cat="Biometric">Biometric</button>
+            <button class="filter-chip" data-cat="Document">Document</button>
+            <button class="filter-chip" data-cat="Media">Media</button>
+        </div>
+    </header>
+
+    <main id="galleryGrid" class="gallery-grid">
+        <!-- Tiles via JS -->
+    </main>
+
+    <!-- Vault Password Gate -->
+    <div id="vaultGate" class="vault-gate hidden">
+        <div class="frozen-glass vault-gate-card">
+            <div id="scanAnimation" class="scan-circle hidden">
+                <div class="scan-line"></div>
+            </div>
+            <h2 id="vaultGateTitle">Access Denied</h2>
+            <p>Verification Required</p>
+            <form id="vaultForm">
+                <input type="password" id="vaultPass" placeholder="••••••••" required>
+                <button type="submit">Decrypt</button>
+                <button type="button" id="closeVaultGate">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Private Folder View -->
+    <div id="privateFolder" class="private-view hidden">
+        <div class="folder-header">
+            <h1>Secret Core</h1>
+            <button id="lockVault">Secure Exit</button>
+        </div>
+        <div id="privateGrid" class="gallery-grid"></div>
+    </div>
+
+    <!-- Advanced Zoom Modal -->
+    <div id="zoomModal" class="zoom-modal hidden">
+        <button id="closeZoom" class="close-zoom">✕</button>
+        <div id="zoomViewport" class="zoom-viewport">
+            <div id="zoomFrame" class="zoom-frame">
+                <img id="zoomedImg" src="" alt="Zoom View">
+            </div>
+        </div>
+        <div class="zoom-controls frozen-glass">
+            <div class="control-row">
+                <button id="zoomOutBtn">➖</button>
+                <span id="zoomLevelText">100%</span>
+                <button id="zoomInBtn">➕</button>
+                <button id="downloadBtn">⬇️</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="gallery-script.js"></script>
+</body>
+</html>
