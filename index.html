@@ -6,7 +6,7 @@
     <title>GHH@OFFICIAL - Ultimate OS Pro v34.5 Custom Photos</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import7 url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
         :root {
             --primary-accent: #3b82f6;
@@ -98,6 +98,12 @@
         .category-chip.active { background: var(--primary-accent); color: white; border-color: transparent; }
         
         #osSwitcherPage2 { position: fixed; top: 85px; right: 16px; z-index: 9500; }
+
+        /* Vault Modal Styling */
+        .modal-overlay { position: fixed; inset: 0; z-index: 14000; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
+        
+        .anim-os { animation: fadeInScale 0.4s var(--anim-curve); }
+        @keyframes fadeInScale { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
     </style>
 </head>
 <body id="mainBody" class="os-origin">
@@ -131,7 +137,7 @@
     </div>
 
     <!-- OS Selection Menu -->
-    <div id="osMenu" class="fixed top-[140px] right-[16px] z-[10000] hidden flex flex-col gap-2">
+    <div id="osMenu" class="fixed top-[140px] right-[16px] z-[12000] hidden flex flex-col gap-2">
         <div class="glass-panel p-2 flex flex-col gap-1 w-48 shadow-2xl overflow-y-auto max-h-[70vh]">
             <div class="px-4 py-3 hover:bg-white/10 cursor-pointer text-[10px] font-black rounded-xl" onclick="setOS('ios')">iOS </div>
             <div class="px-4 py-3 hover:bg-white/10 cursor-pointer text-[10px] font-black rounded-xl" onclick="setOS('origin')">OriginOS ◌</div>
@@ -147,7 +153,7 @@
     </div>
 
     <!-- BOOT SCREEN -->
-    <div id="bootScreen" style="display: none;">
+    <div id="bootScreen">
         <h2 class="text-[10px] font-black tracking-[0.5em] uppercase opacity-80">Initializing Secure System</h2>
         <div class="boot-bar"><div class="boot-fill" id="bootProgress"></div></div>
     </div>
@@ -186,13 +192,14 @@
         <div class="grid grid-cols-2 gap-3 px-4 py-6 gallery-grid" id="gallery-grid"></div>
     </div>
 
-    <!-- VIEW 3: SECRET -->
-    <div id="secretView" class="view-container hidden anim-os">
-        <div class="px-6 py-10 flex justify-between items-center mb-4">
-            <button onclick="exitSecretView()" class="glass-panel w-10 h-10 flex items-center justify-center font-black">&lt;</button>
-            <h1 class="text-2xl font-black uppercase flex-1 text-center" style="color: var(--primary-accent);">Secret Library</h1>
+    <!-- VIEW 3: SECRET (Fixed Display) -->
+    <div id="secretView" class="view-container hidden anim-os" style="background: var(--bg-solid); z-index: 13000;">
+        <div class="sticky-header flex justify-between items-center bg-inherit">
+             <button onclick="exitSecretView()" class="btn-circle !w-10 !h-10 text-sm">✕</button>
+             <h1 class="text-xl font-black uppercase tracking-tighter" style="color: var(--primary-accent);">Secret Library</h1>
+             <div class="w-10"></div>
         </div>
-        <div class="grid grid-cols-2 gap-3 px-4 pb-24 gallery-grid" id="secret-grid"></div>
+        <div class="grid grid-cols-2 gap-3 px-4 py-6 gallery-grid" id="secret-grid"></div>
     </div>
 
     <!-- NAVIGATION DOCK -->
@@ -211,7 +218,7 @@
     </div>
 
     <!-- MODALS -->
-    <div id="vaultModal" class="modal-overlay" style="display: none;" onclick="hideVaultModal()">
+    <div id="vaultModal" class="modal-overlay" onclick="hideVaultModal()">
         <div class="glass-panel p-10 w-full max-w-[340px] text-center" onclick="event.stopPropagation()">
             <div class="text-5xl mb-4">🛡️</div>
             <h3 class="text-lg font-black uppercase mb-6 italic tracking-wider">Protocol Cipher</h3>
@@ -223,12 +230,12 @@
         </div>
     </div>
 
-    <div id="faceIDOverlay" style="display: none;">
+    <div id="faceIDOverlay">
         <div class="scanner-frame"><div class="scan-line"></div></div>
         <p class="text-white font-black mt-8 uppercase tracking-[0.2em]">Bio-Metric Decrypting...</p>
     </div>
 
-    <div id="imageModal" onclick="closeImageModal()" style="display: none;">
+    <div id="imageModal" onclick="closeImageModal()">
         <div class="zoom-ui-overlay">
             <div class="zoom-btn-circle" onclick="applyZoomBtn(1.6, event)">+</div>
             <div class="zoom-btn-circle" onclick="applyZoomBtn(0.6, event)">−</div>
@@ -239,7 +246,7 @@
         <img id="zoomedImage" src="" alt="Zoomed" onclick="event.stopPropagation()">
     </div>
 
-    <div id="customModal" class="modal-overlay" style="display: none;" onclick="closeCustomizeModal()">
+    <div id="customModal" class="modal-overlay" onclick="closeCustomizeModal()">
         <div class="glass-panel p-6 w-full max-w-[380px] m-4" onclick="event.stopPropagation()">
             <h3 class="text-xl font-black mb-6 text-center uppercase italic">OS Configuration</h3>
             <input type="text" id="newHeadingInput" placeholder="System Display Title" class="os-input mb-4">
@@ -292,36 +299,64 @@
         let scale = 1, translateX = 0, translateY = 0, isDragging = false, startX = 0, startY = 0;
         let initialPinchDist = 0, lastScale = 1;
 
-        // --- IDENTITY LIST (Admin removed) ---
         const defaultUsers = [{u: 'Gautam', p: '5757'}, {u: 'Hemant', p: '5757'}, {u: 'Aman', p: '5757'}];
         let users = JSON.parse(localStorage.getItem('ghh_users')) || defaultUsers;
 
-        // Random Generator (Referene ke liye rakha hai)
         function gen(count, seed) {
             let res = [];
             for(let i=0; i<count; i++) res.push(`https://picsum.photos/seed/${seed}_${i}/800/800`);
             return res;
         }
 
-        /* =========================================================
-           HOW TO ADD CUSTOM PHOTOS (IMPORTANT)
-           =========================================================
-           Niche diye gaye 'imageLib' object mein 'gen(100, ...)' ki jagah 
-           aap apna direct link wala array [ 'link1', 'link2' ] dal sakte hain.
-        */
         const imageLib = {
-            All: gen(100, 'all'),        // Replace with: [ 'link1', 'link2', ... ]
-            People: gen(100, 'ppl'),     // Replace with: [ 'your_link_here' ]
-            Documents: gen(100, 'docs'),
-            "Sec 1": gen(100, 's1'),
-            "Sec 2": gen(100, 's2'),
-            "Sec 3": gen(100, 's3'),
-            "Sec 4": gen(100, 's4'),
-            "Sec 5": gen(100, 's5')
+            All: ["https://lh3.googleusercontent.com/pw/AP1GczMTZZMB_rziHj5IKn6GPwYxTiVIK75jqpAXp_G2i0bTLRQQeaKcFYxLGN2FMvGce_GeknW0mRKjhMS4K71GKUf8m2cP9WrBRvPQoqXS87SiigUljpk2=w2400", 
+                "https://lh3.googleusercontent.com/pw/AP1GczNJjU-_D7Td_GqOh60V4ZmOtCw2GEcl7GR9veVX27pWH1opYJ7p6SOPzOPXJfG9YNJvpu2UBrjj7INvk-qiRJsRElVe05NDJNOfDVAKW1YH3V_ZTZcx=w2400",
+                "https://lh3.googleusercontent.com/pw/AP1GczN1GjWQ_gd5JAnJ4YUij76LtONCRx-kKQrGEbMSRZKMzX3uFT0DajnqjVOaWx1PLtsM43_LdsYMgfvNZNF46_HxgpyP5jSV8wAmmiGXPQcTLVlZPQTr=w2400",
+                "https://lh3.googleusercontent.com/pw/AP1GczPcoTtY-eKZxZ0AQKKxyPNc6EHJ5dQlkNkSS2leE0rTtpwntsGJiGhJvZ2K6BVhF50rAODUYo0wijg2aEJnzF5C88EoflmrdqtlO7PcFHr_0Da8FDJj=w2400",
+                "https://lh3.googleusercontent.com/pw/AP1GczNRhCYX1r6H19PjCJ_z1TCqbshGI7s-Gxs7i3oMmzbJFXpcE1GUSbtI7IfLhxomrt35j0zkIVVM5L952p93SgOL2DaKCEQFh290axOTEsfQFC5OO1Lb=w2400",
+                "https://lh3.googleusercontent.com/pw/AP1GczNqT9xWWbZDYjAR6lVHVddB0ZgXcbLhnXKVo92NDj6NeA4SFgH40qc6IlJd4xXVNnlPwK6Urj43Kcfp1CWaLjPTOzu8AVksA_G9ZMbTQfcu4WO2COxg=w2400",
+                "https://lh3.googleusercontent.com/pw/AP1GczP3eh9cdSSmXWOz2-DryWIaWOZ0AkzwhwzTe9Cl3l-FxHEhsRFB682t42uzhoinmRHf3iGBy3uYtxLG5KqWkR6gN_APkljGYDb3fw1TRUsStr_fJkuN=w2400",
+                "https://lh3.googleusercontent.com/pw/AP1GczOacISJX81AvJjUqli-HZ0nsXxGm3-6U_a2NXrx770dml9odyOIsuSSu1SZ2RKyIcRPXA3Ie2uvVhwItLXF2aL5LXZcNxaqsfn37gDXEsLrjyf3CIWu=w2400",
+                "https://lh3.googleusercontent.com/pw/AP1GczO65BBqtekoI_lE_wvu6kWSa5Gkjk7BuKHFD_LjYdWtAQQr7ieTmvYHMGpRr6bDa5yx8EYTK0NdXrg8I0UQab-_4CSe--sLQHEFZb2Y59BNCyI11gcu=w2400",
+                "https://lh3.googleusercontent.com/pw/AP1GczPuXzl9wKYxUSAFwkTvOkRut96FZG4o88_f_CDWodEssPccimR4Ni7UoKpfchV0nHIENqyoVxC0ehV4Ix91pbkgVWYrV5OtHz9-KJJuqO-acYIJpKuW=w2400",
+                "https://lh3.googleusercontent.com/pw/AP1GczPI_xgE4-J_hwNhocI-LPJ1Ye9N8i_X9S_vP6hu9f_VUGIm9idBDAem3HyoyyJ-ZNXCEd6Qv2-JGi_FG-EiokoQC5hq8vktZNE1zy5sEGUbhg9CZOsU=w2400",
+                "https://lh3.googleusercontent.com/pw/AP1GczMFZSnzdJ_C3iRq7iyG6vjlYnKcBTkse-9Lim2AuLyDEB9o3ayy45KykwVbI3zYBI6fOhyLbS7IsUhtuFm7KxUUQH4MYS0hOuTE7Y8ee8Ukv2q29yBM=w2400",
+                "https://lh3.googleusercontent.com/pw/AP1GczMdWFCEgyR1OyNbxM1QmLoEZBRphr-rbMA_a8zP2h25PAFt2P0Q1e0eOXhTW4m1Zr6vKk9Izjc3t4yJjWlNa2wcdbwiqcXMuYGJ6QKc2RpNTOrEMkoC=w2400",
+                "https://lh3.googleusercontent.com/pw/AP1GczNvfjAXYGaQdJQRVPZBoh7RSOfiXsh-NF2OjjjXeTov-OjnvLfbym8Vp9YapfqqdDLj5HElKQdt99_sjtEc4ihKpmh-FQsb_l9_mKZ5_rDlNRgcKJUd=w2400",
+                "https://lh3.googleusercontent.com/pw/AP1GczMv7jnvJAZd_JJHgbgZ8mFSPwDpAZNiC3e_tMIrxFuAu-qSa3Xs0yoj716wSMwF446zS6nzR_vjaCoGL21BhAydEoVNi3IXV6DxX2QQVmNGLC1dqODX=w2400",
+                "https://lh3.googleusercontent.com/pw/AP1GczNlh26PUJyhUFSIfXsmUDAaXkb6xGH1iXUjTpGmdnCKdTFkTDGwZ172f6kvs9GsMqNuz7qIye_x4NFmnD1aIq-czJTUwlkuQlTViMstdzkDopEwzCAB=w2400",
+                "https://lh3.googleusercontent.com/pw/AP1GczMOlZcA-uN6V-90-QKjfB_1XtVe_b9f3hAPz_9zwheBDXSZD6q0JAK8lr4rxoMGGw3f36rYYynSWoJKoOdarFIhMZCz03ysq4YmvTjSEjsk9RVvOCRV=w2400",
+                "https://lh3.googleusercontent.com/pw/AP1GczOxEAD3mnVd0Mpt9F8O7iRQf0flgtqX3pUX3jM7Cfj-IkSmWkHi-hwgHOO76xF2jYVAJSylTdb01jnPB5i4udTSeZ5dl5lIecq0sTdS01rse272HntL=w2400",
+                "https://lh3.googleusercontent.com/pw/AP1GczPKLR07Qrp_87_8zi4ukjCj5KiBMsqEntIrZorYa3xoScv09UxbGwbxD0Ep3e1xc7GXUd9vAzPbjk0Yq2ZwmPu0Sv5xjG4vh3ptilnjhwG8dWfAsT9i=w2400",
+                "https://lh3.googleusercontent.com/pw/AP1GczOt8wdK2me7-JNpN3_7KixTILrEqatYg19TXvLi-lr1d44u03RCHiK3iW8UOuvODfMHTlWi5i-Hgtu67hjlXTphUTW-nXk6RJtOAjrf9rCgcaGxrbak=w2400",
+                "https://lh3.googleusercontent.com/pw/AP1GczOKK6_06ax62t5T18Wp6ZVjVmgzZdpOU4U1FUwkdUnzMTzqh3td_YJUg-YV40kAvgk6fuHwO_6AYXb1greNdTfzS9eyOyKJ1lRCs8TJ17TPsDzrQyrT=w2400",
+                "https://lh3.googleusercontent.com/pw/AP1GczPY4QNaF3Hi_GkAuvdd-50bNUg5myrko2bNE9ZB3swtAy4WcPl6UThFQZrARIfEMhvYazOVnLUzdPT8dpimLTDux0eHHKCIK6bDL8hxKq2KSxu-2eEP=w2400",
+                "https://lh3.googleusercontent.com/pw/AP1GczP6IhNXF0WednDrICsTirjmJ2qnwV_fJcI3h_G-sFWZN_Wal0UZrjMEoMKaQMroVL8fg0e3JmKTOfcBUWc8b0ruINKiZ25aXOHH0KA3wQIvS2UhtbnV=w2400",
+                "https://lh3.googleusercontent.com/pw/AP1GczPe4d1yJLGTSD06RgTNp9DkV_4pkvCAn1lpygaSPcDnVz-JxEpOrHj30B3yMml7Lb3aFAc83fHSPCqcIvAitwfmR072eVcwqhnl55pWcVKUO2S7lqoJ=w2400",
+                "https://lh3.googleusercontent.com/pw/AP1GczNhj8hWQGvYYfaqlf-LYGMD0TL0ThfwDjcj_dN_V_s-goxLogWB6w1ax7SYGnKe9wZOCwPq7eNcnwSz-mr30BHcu6g-bSdU8-5yUB0Y0iHCX7qz-Sj4=w2400",
+                "https://lh3.googleusercontent.com/pw/AP1GczP2n7pk1E225vFv9VMs2rb2H6Q06GUhH4WNwf_OaE5ew1QGapt_xeSj2YQozi7fbklKijszXehXRVg-SNZGSjhuM0QzIxB2fkMz1sEkK_zsGsCqBEsC=w2400",
+                "https://lh3.googleusercontent.com/pw/AP1GczP2n7pk1E225vFv9VMs2rb2H6Q06GUhH4WNwf_OaE5ew1QGapt_xeSj2YQozi7fbklKijszXehXRVg-SNZGSjhuM0QzIxB2fkMz1sEkK_zsGsCqBEsC=w2400",
+                "https://lh3.googleusercontent.com/pw/AP1GczNImNpB7-mDDrgUuaOwX1Ag-gcTcYYuCgLjEUHjqCOVo0dOwSIxgoFeTvUy9O1wuDHFEFZnfZhlM7spVKqmm0SsXjFRCugcrsvwzAXQiO5MOFusdcQA=w2400",
+                "https://lh3.googleusercontent.com/pw/AP1GczO-GjjxCR2st-ovaPz73ElRBMrnxVUqPrFQVlYgs9nG8-odsmCy3RHtJjljtNRoFuH3V6uaF14a8714MpCSJ0bdoBFzlb_oikKYl5HgRwM5MZims4XW=w2400",
+                "https://lh3.googleusercontent.com/pw/AP1GczPEONKFlh5wMGO2dApt8_QcUKDJlCW9b7Wn1jABIa0kUwh5pO__bF-8xkouaXngA9jhLJGEPnvTpMMiO7Rd-Bsm68A6-1HduFrRgXE_NzTbl_JxySwv=w2400",
+                "https://lh3.googleusercontent.com/pw/AP1GczNKfiV_MUILLNw_j21xFeHOzP9a6CjmOJaPsq7St67FDkT74qvfl63NJXiulkkORH6AEAJO_VrT7u2QO7druzNsClkjmjkQPTlpOamjL01AEpS4M-n0=w2400",
+                "https://lh3.googleusercontent.com/pw/AP1GczM7Jxb0ZHXmANYMosMl2nVwlvy3LiwnZd86oF9TKsl3MxTj91F17NsgMlDIrcAPlM3FVyN3uZAFv_4hH-warywFdHM-El7VrlOv9KrjYwm0QL5udL02=w2400",
+                "https://lh3.googleusercontent.com/pw/AP1GczPPeuGsBq4_FNTevAg8-sEI-oG5PUsGFDuCGMp6bNZXH-sen09LKPuTdXL_Pbnm73_sTJociq1VJ6kWhjRZ-9TrCKZ2UcQhQmWHk_h6J63TxnlcpkRu=w2400",
+                "https://lh3.googleusercontent.com/pw/AP1GczPwIKTdEq0uQqHBXI5KLL5IuvL50c85MK0CsC4JWjnSKKbKLe4NnWOwZrHY0XBOe7IHQ4xncRPW1AeSxVDfA6r_o7-K2bcAdYJX6k4TbeKJTF7lF1-E=w2400",
+                "https://lh3.googleusercontent.com/pw/AP1GczMg3loBB198rBI0ouLdJuMbgImDAwoUSXO7tFyNjuJ5fQTFpMYovUWsHy1No84PXlUVV887dGxyz-uU0Gbq8JUQdqaudyZ5uMN9Q5Q68wTqmmSWciuX=w2400" ],
+            
+
+
+            People: gen(20, 'ppl'),
+            Documents: gen(15, 'docs'),
+            "Sec 1": gen(10, 's1'),
+            "Sec 2": gen(10, 's2'),
+            "Sec 3": gen(10, 's3'),
+            "Sec 4": gen(10, 's4'),
+            "Sec 5": gen(10, 's5')
         };
 
-        // Secret Vault ki photos ke liye yahan change karein:
-        const secretPics = gen(20, 'secret_final_v5'); 
+        const secretPics = gen(20, 'top_secret_v34'); 
 
         function initCategoryBar() {
             categoryBar.innerHTML = '';
@@ -359,7 +394,15 @@
                     triggerAnim(galleryView);
                     renderGrid('gallery-grid', imageLib.All);
                 }, 2600);
-            } else { alert("ACCESS DENIED: Credentials Galat Hain!"); }
+            } else { 
+                // Simple error message instead of alert
+                document.getElementById('username').style.borderColor = 'red';
+                document.getElementById('password').style.borderColor = 'red';
+                setTimeout(() => {
+                    document.getElementById('username').style.borderColor = '';
+                    document.getElementById('password').style.borderColor = '';
+                }, 1000);
+            }
         }
 
         function setOS(os) {
@@ -373,9 +416,9 @@
 
         function triggerAnim(el) {
             if(!el) return;
-            el.classList.remove('active');
+            el.classList.remove('anim-os');
             void el.offsetWidth;
-            el.classList.add('active');
+            el.classList.add('anim-os');
         }
 
         function setWallpaper(type) {
@@ -424,17 +467,24 @@
         }
         function showVaultModal() { vaultModal.style.display = 'flex'; document.getElementById('vaultPassword').focus(); }
         function hideVaultModal() { vaultModal.style.display = 'none'; }
+        
         function unlockVault() {
             if(document.getElementById('vaultPassword').value === ADMIN_PW) {
                 hideVaultModal(); 
                 galleryView.classList.add('hidden');
                 osSwitcherPage2.classList.add('hidden');
                 mainDockContainer.classList.add('hidden');
+                
                 secretView.classList.remove('hidden'); 
                 triggerAnim(secretView);
                 renderGrid('secret-grid', secretPics);
-            } else { alert("MASTER KEY ERROR"); }
+                document.getElementById('vaultPassword').value = '';
+            } else { 
+                document.getElementById('vaultPassword').style.borderColor = 'red';
+                setTimeout(() => document.getElementById('vaultPassword').style.borderColor = '', 1000);
+            }
         }
+        
         function exitSecretView() { 
             secretView.classList.add('hidden'); 
             galleryView.classList.remove('hidden'); 
@@ -449,7 +499,6 @@
         function openCustomizeModal() { customModal.style.display = 'flex'; }
         function closeCustomizeModal() { customModal.style.display = 'none'; }
 
-        // --- PRO ZOOM ENGINE ---
         function openImageModal(url) { zoomedImage.src = url; imageModal.style.display = 'flex'; resetZoom(); }
         function closeImageModal() { imageModal.style.display = 'none'; }
         function resetZoom(e) { if(e) e.stopPropagation(); scale = 1; translateX = 0; translateY = 0; updateTransform(); }
@@ -457,6 +506,7 @@
         function applyZoomBtn(f, e) { if(e) e.stopPropagation(); scale = Math.min(Math.max(1, scale * f), 12); updateTransform(); }
         async function downloadImage(e) { if(e) e.stopPropagation(); const a = document.createElement('a'); a.href = zoomedImage.src; a.download = "GHH_Photo.jpg"; a.click(); }
 
+        // Touch Zoom logic
         imageModal.addEventListener('touchstart', (e) => {
             if (e.touches.length === 2) {
                 initialPinchDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
@@ -492,10 +542,12 @@
             const u = document.getElementById('newUsernameInput').value, p = document.getElementById('newPasswordInput').value;
             if(u && p) {
                 users.push({u, p}); localStorage.setItem('ghh_users', JSON.stringify(users));
-                refreshUserList(); alert("Identity Setup Complete.");
+                refreshUserList(); 
+                document.getElementById('newUsernameInput').value = '';
+                document.getElementById('newPasswordInput').value = '';
             }
         }
-        function clearUsers() { if(confirm("Restore defaults?")) { users = defaultUsers; localStorage.setItem('ghh_users', JSON.stringify(users)); refreshUserList(); } }
+        function clearUsers() { users = defaultUsers; localStorage.setItem('ghh_users', JSON.stringify(users)); refreshUserList(); }
         function saveSystem() {
             const h = document.getElementById('newHeadingInput').value;
             if(h) { document.getElementById('mainHeading').innerText = h; localStorage.setItem('ghh_title', h); }
@@ -514,8 +566,6 @@
             refreshUserList(); 
             initCategoryBar(); 
             triggerAnim(loginView);
-            document.getElementById('username').value = '';
-            document.getElementById('password').value = '';
         };
     </script>
 </body>
