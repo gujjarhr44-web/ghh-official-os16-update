@@ -210,7 +210,7 @@
             <p id="cornerValLabel" class="text-[11px] font-bold mt-2 text-center text-blue-500">36px</p>
         </div>
         <div class="dynamic-dock shadow-2xl">
-            <div class="dock-item" onclick="setFilter('All', null)">🏠</div>
+            <div class="dock-item" onclick="setFilter('JODHPUR', null)">🏠</div>
             <div class="dock-item" onclick="toggleCornerPanel()">📐</div>
             <div class="dock-item" onclick="toggleTheme()">🌓</div>
             <div class="dock-item" onclick="logout()">🚪</div>
@@ -309,7 +309,7 @@
         }
 
         const imageLib = {
-            All: ["https://lh3.googleusercontent.com/pw/AP1GczMTZZMB_rziHj5IKn6GPwYxTiVIK75jqpAXp_G2i0bTLRQQeaKcFYxLGN2FMvGce_GeknW0mRKjhMS4K71GKUf8m2cP9WrBRvPQoqXS87SiigUljpk2=w2400", 
+                JODHPUR: ["https://lh3.googleusercontent.com/pw/AP1GczMTZZMB_rziHj5IKn6GPwYxTiVIK75jqpAXp_G2i0bTLRQQeaKcFYxLGN2FMvGce_GeknW0mRKjhMS4K71GKUf8m2cP9WrBRvPQoqXS87SiigUljpk2=w2400", 
                 "https://lh3.googleusercontent.com/pw/AP1GczNJjU-_D7Td_GqOh60V4ZmOtCw2GEcl7GR9veVX27pWH1opYJ7p6SOPzOPXJfG9YNJvpu2UBrjj7INvk-qiRJsRElVe05NDJNOfDVAKW1YH3V_ZTZcx=w2400",
                 "https://lh3.googleusercontent.com/pw/AP1GczN1GjWQ_gd5JAnJ4YUij76LtONCRx-kKQrGEbMSRZKMzX3uFT0DajnqjVOaWx1PLtsM43_LdsYMgfvNZNF46_HxgpyP5jSV8wAmmiGXPQcTLVlZPQTr=w2400",
                 "https://lh3.googleusercontent.com/pw/AP1GczPcoTtY-eKZxZ0AQKKxyPNc6EHJ5dQlkNkSS2leE0rTtpwntsGJiGhJvZ2K6BVhF50rAODUYo0wijg2aEJnzF5C88EoflmrdqtlO7PcFHr_0Da8FDJj=w2400",
@@ -392,7 +392,7 @@
                     galleryView.classList.remove('hidden');
                     mainDockContainer.classList.remove('hidden');
                     triggerAnim(galleryView);
-                    renderGrid('gallery-grid', imageLib.All);
+                    renderGrid('gallery-grid', imageLib.JODHPUR);
                 }, 2600);
             } else { 
                 // Simple error message instead of alert
