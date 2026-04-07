@@ -1,72 +1,273 @@
-const themeMap = {
-    ios: 'theme-ios',
-    oneui: 'theme-oneui',
-    origin: 'theme-origin',
-    miui: 'theme-miui',
-    gaming: 'theme-gaming',
-    nothing: 'theme-nothing'
-};
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GHH@OFFICIAL - Ultimate OS Pro v34.5 Custom Photos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import7 url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
-document.addEventListener('DOMContentLoaded', () => {
-    // 1. Clock Update
-    const clock = document.getElementById('clockDisplay');
-    const date = document.getElementById('dateDisplay');
-    
-    function updateClock() {
-        const now = new Date();
-        clock.innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-        date.innerText = now.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
-    }
-    setInterval(updateClock, 1000);
-    updateClock();
-
-    // 2. Theme & OS Persistence
-    let currentOS = localStorage.getItem('activeOS') || 'ios';
-    let isDarkMode = localStorage.getItem('darkMode') === 'true';
-    
-    function applyOS(os) {
-        document.body.className = '';
-        document.body.classList.add(themeMap[os]);
-        if (isDarkMode) document.body.classList.add('dark-mode');
-        document.getElementById('activeOSLabel').innerText = os;
-        localStorage.setItem('activeOS', os);
-        currentOS = os;
-    }
-    applyOS(currentOS);
-
-    // 3. UI Interactions
-    document.getElementById('osToggleBtn').onclick = () => {
-        document.getElementById('osMenu').classList.toggle('hidden');
-    };
-
-    document.querySelectorAll('.os-opt').forEach(btn => {
-        btn.onclick = () => {
-            applyOS(btn.dataset.os);
-            document.getElementById('osMenu').classList.add('hidden');
-        };
-    });
-
-    document.getElementById('themeToggle').onclick = () => {
-        isDarkMode = !isDarkMode;
-        localStorage.setItem('darkMode', isDarkMode);
-        applyOS(currentOS);
-    };
-
-    // 4. Login Logic
-    document.getElementById('loginForm').onsubmit = (e) => {
-        e.preventDefault();
-        const u = document.getElementById('userInp').value;
-        const p = document.getElementById('passInp').value;
-
-        // Protocols
-        if ( (u === 'admin' && p === 'Gujjar@5757') || (u === 'hemant' && p === '2327') ) {
-            const transition = document.getElementById('transitionOverlay');
-            transition.classList.remove('hidden');
-            setTimeout(() => {
-                window.location.href = 'gallery.html';
-            }, 3000);
-        } else {
-            alert("PROTOCOL_FAILURE: INCORRECT ID/PASS");
+        :root {
+            --primary-accent: #3b82f6;
+            --glass-blur: 25px;
+            --card-radius: 30px;
+            --gallery-item-radius: 36px;
+            --anim-curve: cubic-bezier(0.2, 0.8, 0.2, 1);
+            --anim-speed: 0.6s;
+            --neon-color: rgba(59, 130, 246, 0.6);
+            --glass-bg: rgba(255, 255, 255, 0.4);
+            --text-color: #1a1a1a;
+            --bg-solid: #ffffff;
         }
-    };
-});
+
+        /* --- OS THEME DEFINITIONS --- */
+        body.os-ios { --primary-accent: #007aff; --card-radius: 46px; --glass-blur: 50px; --neon-color: rgba(0, 122, 255, 0.7); }
+        body.os-origin { --primary-accent: #6366f1; --card-radius: 34px; --glass-blur: 65px; --neon-color: rgba(99, 102, 241, 0.7); }
+        body.os-realme { --primary-accent: #ffc107; --card-radius: 20px; --glass-blur: 35px; --neon-color: rgba(255, 193, 7, 0.6); }
+        body.os-oneui { --primary-accent: #0341f1; --card-radius: 42px; --glass-blur: 30px; --neon-color: rgba(3, 65, 241, 0.7); }
+        body.os-nothing { --primary-accent: #ffffff; --card-radius: 12px; --glass-blur: 40px; --neon-color: rgba(150, 150, 150, 0.5); --bg-solid: #000000; --text-color: #ffffff; }
+        body.os-oxygen { --primary-accent: #eb0029; --card-radius: 15px; --glass-blur: 20px; --neon-color: rgba(235, 0, 41, 0.7); }
+        body.os-pixel { --primary-accent: #4285f4; --card-radius: 28px; --glass-blur: 35px; --neon-color: rgba(66, 133, 244, 0.6); }
+        body.os-hyper { --primary-accent: #1e90ff; --card-radius: 28px; --glass-blur: 30px; --neon-color: rgba(30, 144, 255, 0.7); }
+        body.os-rog { --primary-accent: #ff003c; --card-radius: 4px; --glass-blur: 15px; --neon-color: rgba(255, 0, 60, 0.9); --bg-solid: #050505; --text-color: #ffffff; }
+        body.os-gaming { --primary-accent: #00ff41; --card-radius: 8px; --glass-blur: 10px; --neon-color: rgba(0, 255, 65, 0.8); --bg-solid: #0a0a0a; --text-color: #ffffff; }
+
+        body.dark-mode { --glass-bg: rgba(20, 20, 20, 0.65); --text-color: #ffffff; --bg-solid: #0a0a0a; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0; background: var(--bg-solid); color: var(--text-color);
+            transition: background 0.8s ease, color 0.5s ease;
+            overflow: hidden; height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            touch-action: manipulation;
+        }
+
+        /* --- BACKGROUND --- */
+        .liquid-bg { position: fixed; inset: 0; z-index: -1; overflow: hidden; transform: translateZ(0); pointer-events: none; }
+        .blob { position: absolute; width: 700px; height: 700px; background: var(--neon-color); filter: blur(160px); border-radius: 50%; opacity: 0.2; animation: moveBlobs 20s infinite alternate ease-in-out; }
+        @keyframes moveBlobs { 0% { transform: translate(-10%, -10%); } 100% { transform: translate(15%, 15%); } }
+
+        /* --- UI COMPONENTS --- */
+        .glass-panel { background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)) saturate(190%); border: 1.5px solid rgba(255, 255, 255, 0.35); border-radius: var(--card-radius); box-shadow: 0 8px 32px rgba(0,0,0,0.08); }
+
+        .notch { position: fixed; top: 8px; left: 50%; transform: translateX(-50%); width: 130px; height: 28px; background: black; border-radius: 20px; z-index: 10000; display: flex; align-items: center; justify-content: center; color: white; font-size: 10px; font-weight: 800; }
+        .status-bar { height: 44px; padding: 0 16px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 800; position: fixed; top: 38px; width: 100%; z-index: 9000; color: var(--text-color); }
+
+        .top-controls { position: fixed; top: 85px; left: 0; width: 100%; padding: 0 16px; display: flex; justify-content: space-between; z-index: 9500; pointer-events: none; }
+        .btn-action { pointer-events: auto; padding: 10px 18px; border-radius: 14px; font-size: 10px; font-weight: 900; text-transform: uppercase; cursor: pointer; transition: 0.2s; background: var(--glass-bg); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.4); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .btn-action:active { transform: scale(0.9); }
+        .btn-circle { pointer-events: auto; width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; background: var(--glass-bg); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.4); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+
+        /* Login Layout */
+        .os-input { background: rgba(255, 255, 255, 0.2); border: 1.5px solid rgba(255, 255, 255, 0.4); border-radius: 18px; width: 100%; outline: none; padding: 1.1rem; font-weight: 700; color: var(--text-color); transition: 0.3s; }
+        .os-btn { background: var(--primary-accent); color: white; border-radius: 18px; font-weight: 900; transition: 0.3s; padding: 1rem; width: 100%; text-transform: uppercase; border: 1.5px solid rgba(255, 255, 255, 0.3); cursor: pointer; }
+
+        .user-bubble { padding: 10px 22px; border-radius: 16px; background: rgba(255,255,255,0.1); border: 1.5px solid rgba(255,255,255,0.25); font-size: 11px; font-weight: 800; cursor: pointer; white-space: nowrap; transition: 0.3s; }
+        .user-bubble.active { background: var(--primary-accent); color: white; border-color: transparent; box-shadow: 0 0 15px var(--neon-color); }
+
+        .dynamic-dock-container { position: fixed; bottom: 12px; left: 0; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 11000; pointer-events: none; }
+        .dynamic-dock { pointer-events: auto; width: 92%; max-width: 360px; height: 70px; display: flex; align-items: center; justify-content: space-around; border-radius: 26px; background: rgba(255, 255, 255, 0.15); border: 1.5px solid rgba(255, 255, 255, 0.3); backdrop-filter: blur(25px); box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
+        .dock-item { font-size: 26px; cursor: pointer; transition: 0.3s; padding: 12px; border-radius: 16px; }
+        
+        #cornerSliderPanel { width: 240px; padding: 20px; margin-bottom: 15px; display: none; pointer-events: auto; }
+
+        .gallery-grid { padding-bottom: 110px; }
+        .gallery-item { border: 1.2px solid rgba(255, 255, 255, 0.5); background: var(--glass-bg); border-radius: var(--gallery-item-radius); overflow: hidden; transition: 0.3s ease; cursor: pointer; aspect-ratio: 1; }
+
+        .view-container { position: absolute; inset: 0; overflow-y: auto; padding-top: 38px; scroll-behavior: smooth; }
+        .hidden { display: none !important; }
+
+        #faceIDOverlay { position: fixed; inset: 0; z-index: 13000; background: rgba(0,0,0,0.92); display: none; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
+        .scanner-frame { width: 220px; height: 220px; border: 3px solid var(--primary-accent); border-radius: 60px; position: relative; overflow: hidden; }
+        .scan-line { width: 100%; height: 6px; background: var(--primary-accent); position: absolute; top: 0; animation: scanMove 2s infinite linear; }
+        @keyframes scanMove { 0% { top: 0; } 100% { top: 100%; } }
+
+        #bootScreen { position: fixed; inset: 0; background: black; z-index: 100000; display: none; flex-direction: column; align-items: center; justify-content: center; color: white; }
+        .boot-bar { width: 180px; height: 4px; background: #222; border-radius: 2px; margin-top: 25px; overflow: hidden; }
+        .boot-fill { height: 100%; background: var(--primary-accent); width: 0%; transition: 2.5s linear; }
+
+        #imageModal { position: fixed; inset: 0; z-index: 15000; background: rgba(0,0,0,0.98); display: none; align-items: center; justify-content: center; }
+        #zoomedImage { max-width: 100%; max-height: 100%; transition: transform 0.1s linear; will-change: transform; pointer-events: auto; }
+        .zoom-ui-overlay { position: fixed; bottom: 35px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 15005; pointer-events: auto; }
+        .zoom-btn-circle { width: 52px; height: 52px; border-radius: 50%; background: rgba(255,255,255,0.15); border: 1.5px solid rgba(255,255,255,0.3); color: white; display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; backdrop-filter: blur(12px); }
+
+        .sticky-header { position: sticky; top: 0; z-index: 100; background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); padding: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+        .category-chip { flex: 0 0 auto; padding: 10px 20px; background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 50px; font-size: 10px; font-weight: 800; margin-right: 10px; white-space: nowrap; cursor: pointer; color: var(--text-color); }
+        .category-chip.active { background: var(--primary-accent); color: white; border-color: transparent; }
+        
+        #osSwitcherPage2 { position: fixed; top: 85px; right: 16px; z-index: 9500; }
+    </style>
+</head>
+<body id="mainBody" class="os-origin">
+
+    <div class="liquid-bg" id="wallpaperLayer">
+        <div class="blob" style="top:-10%; left:-10%;"></div>
+        <div class="blob" style="bottom:-10%; right:20%;"></div>
+    </div>
+
+    <div class="notch" id="dynamicNotch">GHH OS Stable</div>
+
+    <div class="status-bar">
+        <div id="os-time-small">00:00</div>
+        <div class="flex items-center gap-2">
+            <span id="os-brand-logo">◌</span>
+            <div class="w-6 h-3 border border-black/20 rounded-sm p-[1px] flex items-center">
+                <div class="bg-green-500 h-full w-[88%]"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page 1 Only Controls -->
+    <div class="top-controls" id="loginControls">
+        <div class="btn-action shadow-lg" id="custBtn" onclick="openCustomizeModal()">⚙️ Customize</div>
+        <div class="btn-circle shadow-lg" id="switcherBtn" onclick="toggleOSMenu()">💠</div>
+    </div>
+
+    <!-- Page 2 Switcher -->
+    <div id="osSwitcherPage2" class="hidden">
+        <div class="btn-circle shadow-lg" onclick="toggleOSMenu()">💠</div>
+    </div>
+
+    <!-- OS Selection Menu -->
+    <div id="osMenu" class="fixed top-[140px] right-[16px] z-[10000] hidden flex flex-col gap-2">
+        <div class="glass-panel p-2 flex flex-col gap-1 w-48 shadow-2xl overflow-y-auto max-h-[70vh]">
+            <div class="px-4 py-3 hover:bg-white/10 cursor-pointer text-[10px] font-black rounded-xl" onclick="setOS('ios')">iOS </div>
+            <div class="px-4 py-3 hover:bg-white/10 cursor-pointer text-[10px] font-black rounded-xl" onclick="setOS('origin')">OriginOS ◌</div>
+            <div class="px-4 py-3 hover:bg-white/10 cursor-pointer text-[10px] font-black rounded-xl" onclick="setOS('realme')">RealmeUI ◉</div>
+            <div class="px-4 py-3 hover:bg-white/10 cursor-pointer text-[10px] font-black rounded-xl" onclick="setOS('oneui')">One UI 🔵</div>
+            <div class="px-4 py-3 hover:bg-white/10 cursor-pointer text-[10px] font-black rounded-xl" onclick="setOS('nothing')">Nothing OS ⚪</div>
+            <div class="px-4 py-3 hover:bg-white/10 cursor-pointer text-[10px] font-black rounded-xl" onclick="setOS('oxygen')">OxygenOS ⚡</div>
+            <div class="px-4 py-3 hover:bg-white/10 cursor-pointer text-[10px] font-black rounded-xl" onclick="setOS('pixel')">Pixel UI 💎</div>
+            <div class="px-4 py-3 hover:bg-white/10 cursor-pointer text-[10px] font-black rounded-xl" onclick="setOS('hyper')">HyperOS ✧</div>
+            <div class="px-4 py-3 hover:bg-white/10 cursor-pointer text-[10px] font-black rounded-xl" onclick="setOS('rog')">ROG UI 👺</div>
+            <div class="px-4 py-3 hover:bg-white/10 cursor-pointer text-[10px] font-black rounded-xl" onclick="setOS('gaming')">Extreme Gaming 🎮</div>
+        </div>
+    </div>
+
+    <!-- BOOT SCREEN -->
+    <div id="bootScreen" style="display: none;">
+        <h2 class="text-[10px] font-black tracking-[0.5em] uppercase opacity-80">Initializing Secure System</h2>
+        <div class="boot-bar"><div class="boot-fill" id="bootProgress"></div></div>
+    </div>
+
+    <!-- VIEW 1: LOGIN -->
+    <div id="loginView" class="view-container active flex flex-col items-center justify-center px-6 anim-os">
+        <div class="text-center mb-10 mt-20">
+            <div id="os-widget-clock" class="text-7xl font-black mb-1">00:00</div>
+            <h1 id="mainHeading" class="text-4xl font-black tracking-tighter italic" style="color: var(--primary-accent);">GHH<span class="opacity-30">@</span>OFFICIAL</h1>
+        </div>
+        <div class="glass-panel p-8 w-full max-w-[380px]">
+            <div class="space-y-5">
+                <p class="text-[9px] font-black uppercase opacity-40 ml-1">Identity Selection</p>
+                <div id="userList" class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide"></div>
+                <input type="text" id="username" class="os-input text-sm" placeholder="Enter Identity ID" autocomplete="off" value="">
+                <input type="password" id="password" class="os-input text-sm" placeholder="Enter Cipher Key" autocomplete="off" value="">
+                <button onclick="handleLoginWithBoot()" class="os-btn shadow-lg active:scale-95">Initialize</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEW 2: GALLERY -->
+    <div id="galleryView" class="view-container hidden anim-os">
+        <div class="sticky-header">
+            <div class="flex justify-between items-end mb-4">
+                <div>
+                    <h1 id="galleryTitle" class="text-3xl font-black uppercase leading-none">Vault</h1>
+                    <p class="text-[8px] font-black opacity-50 uppercase mt-1 tracking-widest">Authenticated</p>
+                </div>
+                <button onclick="startFaceID()" class="os-btn !bg-black px-4 py-2 text-[10px] w-auto border border-white/20 active:scale-90">
+                    Private Vault 🔒
+                </button>
+            </div>
+            <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" id="categoryBar"></div>
+        </div>
+        <div class="grid grid-cols-2 gap-3 px-4 py-6 gallery-grid" id="gallery-grid"></div>
+    </div>
+
+    <!-- VIEW 3: SECRET -->
+    <div id="secretView" class="view-container hidden anim-os">
+        <div class="px-6 py-10 flex justify-between items-center mb-4">
+            <button onclick="exitSecretView()" class="glass-panel w-10 h-10 flex items-center justify-center font-black">&lt;</button>
+            <h1 class="text-2xl font-black uppercase flex-1 text-center" style="color: var(--primary-accent);">Secret Library</h1>
+        </div>
+        <div class="grid grid-cols-2 gap-3 px-4 pb-24 gallery-grid" id="secret-grid"></div>
+    </div>
+
+    <!-- NAVIGATION DOCK -->
+    <div id="mainDockContainer" class="dynamic-dock-container hidden">
+        <div id="cornerSliderPanel" class="glass-panel shadow-2xl">
+            <p class="text-[10px] font-black uppercase mb-3 opacity-60 text-center">Photo Border Radius</p>
+            <input type="range" min="0" max="60" value="36" class="w-full h-1 bg-blue-200 rounded-lg appearance-none cursor-pointer" oninput="updatePhotoCorners(this.value)">
+            <p id="cornerValLabel" class="text-[11px] font-bold mt-2 text-center text-blue-500">36px</p>
+        </div>
+        <div class="dynamic-dock shadow-2xl">
+            <div class="dock-item" onclick="setFilter('All', null)">🏠</div>
+            <div class="dock-item" onclick="toggleCornerPanel()">📐</div>
+            <div class="dock-item" onclick="toggleTheme()">🌓</div>
+            <div class="dock-item" onclick="logout()">🚪</div>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+    <div id="vaultModal" class="modal-overlay" style="display: none;" onclick="hideVaultModal()">
+        <div class="glass-panel p-10 w-full max-w-[340px] text-center" onclick="event.stopPropagation()">
+            <div class="text-5xl mb-4">🛡️</div>
+            <h3 class="text-lg font-black uppercase mb-6 italic tracking-wider">Protocol Cipher</h3>
+            <input type="password" id="vaultPassword" class="os-input text-center text-xl tracking-[0.5em]" placeholder="••••">
+            <div class="flex gap-3 mt-6">
+                <button onclick="unlockVault()" class="os-btn flex-1 py-3 text-[10px]">UNLOCK</button>
+                <button onclick="hideVaultModal()" class="glass-panel flex-1 py-3 text-[10px] border border-black/10">CANCEL</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="faceIDOverlay" style="display: none;">
+        <div class="scanner-frame"><div class="scan-line"></div></div>
+        <p class="text-white font-black mt-8 uppercase tracking-[0.2em]">Bio-Metric Decrypting...</p>
+    </div>
+
+    <div id="imageModal" onclick="closeImageModal()" style="display: none;">
+        <div class="zoom-ui-overlay">
+            <div class="zoom-btn-circle" onclick="applyZoomBtn(1.6, event)">+</div>
+            <div class="zoom-btn-circle" onclick="applyZoomBtn(0.6, event)">−</div>
+            <div class="zoom-btn-circle" onclick="downloadImage(event)">💾</div>
+            <div class="zoom-btn-circle" onclick="resetZoom(event)">↺</div>
+            <div class="zoom-btn-circle" onclick="closeImageModal()">✕</div>
+        </div>
+        <img id="zoomedImage" src="" alt="Zoomed" onclick="event.stopPropagation()">
+    </div>
+
+    <div id="customModal" class="modal-overlay" style="display: none;" onclick="closeCustomizeModal()">
+        <div class="glass-panel p-6 w-full max-w-[380px] m-4" onclick="event.stopPropagation()">
+            <h3 class="text-xl font-black mb-6 text-center uppercase italic">OS Configuration</h3>
+            <input type="text" id="newHeadingInput" placeholder="System Display Title" class="os-input mb-4">
+            
+            <div class="p-3 border border-black/10 rounded-xl mb-4">
+                <p class="text-[9px] font-black uppercase mb-2 opacity-50 text-center">Background System</p>
+                <div class="flex gap-2">
+                    <button onclick="setWallpaper('liquid')" class="flex-1 py-1.5 text-[9px] border border-black/20 rounded-lg">Liquid</button>
+                    <button onclick="setWallpaper('midnight')" class="flex-1 py-1.5 text-[9px] border border-black/20 rounded-lg">Midnight</button>
+                    <button onclick="setWallpaper('solid')" class="flex-1 py-1.5 text-[9px] border border-black/20 rounded-lg">Solid</button>
+                </div>
+            </div>
+
+            <div class="p-4 border border-dashed border-gray-300 rounded-2xl bg-white/5 mb-4">
+                <p class="text-[9px] font-black uppercase mb-2 opacity-60 text-center">Identity Management</p>
+                <input type="text" id="newUsernameInput" placeholder="New ID" class="os-input mb-2 text-sm">
+                <input type="password" id="newPasswordInput" placeholder="Key" class="os-input text-sm">
+                <div class="flex gap-2 mt-3">
+                    <button onclick="addUser()" class="os-btn flex-1 py-2 text-[10px]">ADD USER</button>
+                    <button onclick="clearUsers()" class="os-btn flex-1 py-2 text-[10px] !bg-red-500">RESET</button>
+                </div>
+            </div>
+            <button onclick="saveSystem()" class="os-btn py-3 text-xs shadow-lg">Commit Updates</button>
+        </div>
+    </div>
+
+    <div class="home-bar"></div>
+
+    <script>
+        const imageModal = document.getElementById('imageModal');
+        const zoom
