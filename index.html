@@ -270,4 +270,253 @@
 
     <script>
         const imageModal = document.getElementById('imageModal');
-        const zoom
+        const zoomedImage = document.getElementById('zoomedImage');
+        const loginView = document.getElementById('loginView');
+        const galleryView = document.getElementById('galleryView');
+        const secretView = document.getElementById('secretView');
+        const vaultModal = document.getElementById('vaultModal');
+        const faceIDOverlay = document.getElementById('faceIDOverlay');
+        const osMenu = document.getElementById('osMenu');
+        const customModal = document.getElementById('customModal');
+        const userListEl = document.getElementById('userList');
+        const categoryBar = document.getElementById('categoryBar');
+        const wallpaperLayer = document.getElementById('wallpaperLayer');
+        const mainDockContainer = document.getElementById('mainDockContainer');
+        const loginControls = document.getElementById('loginControls');
+        const osSwitcherPage2 = document.getElementById('osSwitcherPage2');
+
+        const ADMIN_PW = 'Gujjar@5757';
+        let currentOS = 'origin';
+        let isDarkMode = false;
+        
+        let scale = 1, translateX = 0, translateY = 0, isDragging = false, startX = 0, startY = 0;
+        let initialPinchDist = 0, lastScale = 1;
+
+        // --- IDENTITY LIST (Admin removed) ---
+        const defaultUsers = [{u: 'Gautam', p: '5757'}, {u: 'Hemant', p: '5757'}, {u: 'Aman', p: '5757'}];
+        let users = JSON.parse(localStorage.getItem('ghh_users')) || defaultUsers;
+
+        // Random Generator (Referene ke liye rakha hai)
+        function gen(count, seed) {
+            let res = [];
+            for(let i=0; i<count; i++) res.push(`https://picsum.photos/seed/${seed}_${i}/800/800`);
+            return res;
+        }
+
+        /* =========================================================
+           HOW TO ADD CUSTOM PHOTOS (IMPORTANT)
+           =========================================================
+           Niche diye gaye 'imageLib' object mein 'gen(100, ...)' ki jagah 
+           aap apna direct link wala array [ 'link1', 'link2' ] dal sakte hain.
+        */
+        const imageLib = {
+            All: gen(100, 'all'),        // Replace with: [ 'link1', 'link2', ... ]
+            People: gen(100, 'ppl'),     // Replace with: [ 'your_link_here' ]
+            Documents: gen(100, 'docs'),
+            "Sec 1": gen(100, 's1'),
+            "Sec 2": gen(100, 's2'),
+            "Sec 3": gen(100, 's3'),
+            "Sec 4": gen(100, 's4'),
+            "Sec 5": gen(100, 's5')
+        };
+
+        // Secret Vault ki photos ke liye yahan change karein:
+        const secretPics = gen(20, 'secret_final_v5'); 
+
+        function initCategoryBar() {
+            categoryBar.innerHTML = '';
+            Object.keys(imageLib).forEach((cat, idx) => {
+                const chip = document.createElement('div');
+                chip.className = `category-chip ${idx === 0 ? 'active' : ''}`;
+                chip.innerText = cat;
+                chip.onclick = () => setFilter(cat, chip);
+                categoryBar.appendChild(chip);
+            });
+        }
+
+        function toggleCornerPanel() {
+            const panel = document.getElementById('cornerSliderPanel');
+            panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+        }
+        function updatePhotoCorners(val) {
+            document.documentElement.style.setProperty('--gallery-item-radius', `${val}px`);
+            document.getElementById('cornerValLabel').innerText = `${val}px`;
+        }
+
+        function handleLoginWithBoot() {
+            const u = document.getElementById('username').value, p = document.getElementById('password').value;
+            const valid = users.find(user => user.u === u && user.p === p);
+            if (valid) {
+                document.getElementById('bootScreen').style.display = 'flex';
+                setTimeout(() => document.getElementById('bootProgress').style.width = '100%', 50);
+                setTimeout(() => {
+                    document.getElementById('bootScreen').style.display = 'none';
+                    loginView.classList.add('hidden');
+                    loginControls.classList.add('hidden'); 
+                    osSwitcherPage2.classList.remove('hidden'); 
+                    galleryView.classList.remove('hidden');
+                    mainDockContainer.classList.remove('hidden');
+                    triggerAnim(galleryView);
+                    renderGrid('gallery-grid', imageLib.All);
+                }, 2600);
+            } else { alert("ACCESS DENIED: Credentials Galat Hain!"); }
+        }
+
+        function setOS(os) {
+            currentOS = os;
+            document.body.className = `os-${os}` + (isDarkMode ? ' dark-mode' : '');
+            document.getElementById('os-brand-logo').innerText = {ios:'', origin:'◌', realme:'◉', hyper:'✧', gaming:'🎮', oxygen:'⚡', oneui:'🔵', nothing:'⚪', pixel:'💎', rog:'👺'}[os] || '◌';
+            osMenu.classList.add('hidden');
+            const active = [loginView, galleryView, secretView].find(v => !v.classList.contains('hidden'));
+            if(active) triggerAnim(active);
+        }
+
+        function triggerAnim(el) {
+            if(!el) return;
+            el.classList.remove('active');
+            void el.offsetWidth;
+            el.classList.add('active');
+        }
+
+        function setWallpaper(type) {
+            wallpaperLayer.innerHTML = '';
+            wallpaperLayer.style.background = 'none';
+            if(type === 'liquid') {
+                wallpaperLayer.innerHTML = '<div class="blob" style="top:-10%; left:-10%;"></div><div class="blob" style="bottom:-10%; right:20%;"></div>';
+            } else if(type === 'midnight') {
+                wallpaperLayer.style.background = 'radial-gradient(circle at center, #1a1a2e 0%, #16213e 100%)';
+            } else { wallpaperLayer.style.background = isDarkMode ? '#0a0a0a' : '#ffffff'; }
+        }
+
+        function refreshUserList() {
+            userListEl.innerHTML = '';
+            users.forEach(user => {
+                const btn = document.createElement('div');
+                btn.className = "user-bubble shadow-sm";
+                btn.innerText = user.u.toUpperCase();
+                btn.onclick = () => { 
+                    document.getElementById('username').value = user.u; 
+                    document.querySelectorAll('.user-bubble').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                };
+                userListEl.appendChild(btn);
+            });
+        }
+
+        function renderGrid(containerId, images) {
+            const grid = document.getElementById(containerId);
+            if(!grid) return;
+            grid.innerHTML = '';
+            images.forEach(url => {
+                const div = document.createElement('div');
+                div.className = `gallery-item glass-panel`;
+                div.innerHTML = `<img src="${url}" class="w-full h-full object-cover" loading="lazy" onclick="openImageModal('${url}')">`;
+                grid.appendChild(div);
+            });
+        }
+
+        function startFaceID() {
+            faceIDOverlay.style.display = 'flex';
+            setTimeout(() => {
+                faceIDOverlay.style.display = 'none';
+                showVaultModal();
+            }, 2000);
+        }
+        function showVaultModal() { vaultModal.style.display = 'flex'; document.getElementById('vaultPassword').focus(); }
+        function hideVaultModal() { vaultModal.style.display = 'none'; }
+        function unlockVault() {
+            if(document.getElementById('vaultPassword').value === ADMIN_PW) {
+                hideVaultModal(); 
+                galleryView.classList.add('hidden');
+                osSwitcherPage2.classList.add('hidden');
+                mainDockContainer.classList.add('hidden');
+                secretView.classList.remove('hidden'); 
+                triggerAnim(secretView);
+                renderGrid('secret-grid', secretPics);
+            } else { alert("MASTER KEY ERROR"); }
+        }
+        function exitSecretView() { 
+            secretView.classList.add('hidden'); 
+            galleryView.classList.remove('hidden'); 
+            osSwitcherPage2.classList.remove('hidden');
+            mainDockContainer.classList.remove('hidden');
+            triggerAnim(galleryView); 
+        }
+
+        function logout() { location.reload(); }
+        function toggleOSMenu() { osMenu.classList.toggle('hidden'); }
+        function toggleTheme() { isDarkMode = !isDarkMode; document.body.classList.toggle('dark-mode', isDarkMode); }
+        function openCustomizeModal() { customModal.style.display = 'flex'; }
+        function closeCustomizeModal() { customModal.style.display = 'none'; }
+
+        // --- PRO ZOOM ENGINE ---
+        function openImageModal(url) { zoomedImage.src = url; imageModal.style.display = 'flex'; resetZoom(); }
+        function closeImageModal() { imageModal.style.display = 'none'; }
+        function resetZoom(e) { if(e) e.stopPropagation(); scale = 1; translateX = 0; translateY = 0; updateTransform(); }
+        function updateTransform() { zoomedImage.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`; }
+        function applyZoomBtn(f, e) { if(e) e.stopPropagation(); scale = Math.min(Math.max(1, scale * f), 12); updateTransform(); }
+        async function downloadImage(e) { if(e) e.stopPropagation(); const a = document.createElement('a'); a.href = zoomedImage.src; a.download = "GHH_Photo.jpg"; a.click(); }
+
+        imageModal.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 2) {
+                initialPinchDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
+                lastScale = scale;
+            } else if (e.touches.length === 1 && scale > 1) {
+                isDragging = true; startX = e.touches[0].pageX - translateX; startY = e.touches[0].pageY - translateY;
+            }
+        }, { passive: false });
+
+        imageModal.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 2) {
+                e.preventDefault();
+                scale = Math.min(Math.max(1, lastScale * (Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY) / initialPinchDist)), 12);
+                updateTransform();
+            } else if (e.touches.length === 1 && isDragging) {
+                translateX = e.touches[0].pageX - startX; translateY = e.touches[0].pageY - startY;
+                updateTransform();
+            }
+        }, { passive: false });
+
+        imageModal.addEventListener('touchend', () => isDragging = false);
+
+        function setFilter(cat, chip) {
+            if(chip) {
+                document.querySelectorAll('.category-chip').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+            }
+            renderGrid('gallery-grid', imageLib[cat] || imageLib.All);
+            document.getElementById('cornerSliderPanel').style.display = 'none';
+        }
+
+        function addUser() {
+            const u = document.getElementById('newUsernameInput').value, p = document.getElementById('newPasswordInput').value;
+            if(u && p) {
+                users.push({u, p}); localStorage.setItem('ghh_users', JSON.stringify(users));
+                refreshUserList(); alert("Identity Setup Complete.");
+            }
+        }
+        function clearUsers() { if(confirm("Restore defaults?")) { users = defaultUsers; localStorage.setItem('ghh_users', JSON.stringify(users)); refreshUserList(); } }
+        function saveSystem() {
+            const h = document.getElementById('newHeadingInput').value;
+            if(h) { document.getElementById('mainHeading').innerText = h; localStorage.setItem('ghh_title', h); }
+            closeCustomizeModal();
+        }
+
+        setInterval(() => {
+            const now = new Date();
+            const time = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+            document.getElementById('os-time-small').innerText = time;
+            document.getElementById('os-widget-clock').innerText = time;
+        }, 1000);
+
+        window.onload = () => { 
+            const savedT = localStorage.getItem('ghh_title'); if(savedT) document.getElementById('mainHeading').innerText = savedT;
+            refreshUserList(); 
+            initCategoryBar(); 
+            triggerAnim(loginView);
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+        };
+    </script>
+</body>
+</html>
