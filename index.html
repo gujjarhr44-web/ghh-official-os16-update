@@ -170,6 +170,11 @@
     border-radius: 20px;
     margin-bottom: 15px;
 }
+body.os-nature { --primary-accent: #2ecc71; background: linear-gradient(to bottom, #134e5e, #71b280) !important; color: #f0fff0; }
+.leaf { position: absolute; width: 15px; height: 15px; background: #2ecc71; border-radius: 2px 15px 2px 15px; opacity: 0.6; animation: fall linear infinite; }
+@keyframes fall { 0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; } 100% { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
+.bird-animation { position: absolute; width: 4px; height: 4px; background: white; border-radius: 50%; animation: fly 15s infinite linear; opacity: 0.4; }
+@keyframes fly { from { left: -10%; top: 20%; } to { left: 110%; top: 10%; } }
 
 </style>
     </style>
@@ -180,6 +185,12 @@
     <audio id="clickSound" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" preload="auto"></audio>
     <audio id="unlockSound" src="https://assets.mixkit.co/active_storage/sfx/2530/2530-preview.mp3" preload="auto"></audio>
     <audio id="errorSound" src="https://assets.mixkit.co/active_storage/sfx/2573/2573-preview.mp3" preload="auto"></audio>
+    
+    <audio id="natureMusic" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" loop preload="auto"></audio>
+    <div id="natureLiveLayer" class="fixed inset-0 pointer-events-none z-0 hidden">
+        <div class="bird-animation"></div>
+        <div id="leafContainer"></div>
+    </div>
     <div class="liquid-bg" id="wallpaperLayer">
         <div class="blob" style="top:-10%; left:-10%;"></div>
         <div class="blob" style="bottom:-10%; right:20%;"></div>
@@ -218,8 +229,9 @@
             <div class="px-4 py-3 hover:bg-white/10 cursor-pointer text-[10px] font-black rounded-xl" onclick="setOS('oxygen')">OxygenOS ⚡</div>
             <div class="px-4 py-3 hover:bg-white/10 cursor-pointer text-[10px] font-black rounded-xl" onclick="setOS('pixel')">Pixel UI 💎</div>
             <div class="px-4 py-3 hover:bg-white/10 cursor-pointer text-[10px] font-black rounded-xl" onclick="setOS('hyper')">HyperOS ✧</div>
-            <div class="px-4 py-3 hover:bg-white/10 cursor-pointer text-[10px] font-black rounded-xl" onclick="setOS('rog')">ROG UI 👺</div>
-            <div class="px-4 py-3 hover:bg-white/10 cursor-pointer text-[10px] font-black rounded-xl" onclick="setOS('gaming')">Extreme Gaming 🎮</div>
+           <div class="px-4 py-3 hover:bg-white/10 cursor-pointer text-[10px] font-black rounded-xl" onclick="setOS('rog')">ROG UI 👺</div>
+<div class="px-4 py-3 hover:bg-green-500/20 cursor-pointer text-[10px] font-black rounded-xl text-green-500 border border-green-500/20" onclick="setOS('nature')">NatureOS 🌿</div>
+<div class="px-4 py-3 hover:bg-white/10 cursor-pointer text-[10px] font-black rounded-xl" onclick="setOS('gaming')">Extreme Gaming 🎮</div>
         </div>
     </div>
 
@@ -587,13 +599,29 @@ document.getElementById('mainHeading').onclick = function() {
         }
 
         function setOS(os) {
-            currentOS = os;
-            document.body.className = `os-${os}` + (isDarkMode ? ' dark-mode' : '');
-            document.getElementById('os-brand-logo').innerText = {ios:'', origin:'◌', realme:'◉', hyper:'✧', gaming:'🎮', oxygen:'⚡', oneui:'🔵', nothing:'⚪', pixel:'💎', rog:'👺'}[os] || '◌';
-            osMenu.classList.add('hidden');
-            const active = [loginView, galleryView, secretView].find(v => !v.classList.contains('hidden'));
-            if(active) triggerAnim(active);
-        }
+    currentOS = os;
+    document.body.className = `os-${os}` + (isDarkMode ? ' dark-mode' : '');
+    
+    const logos = {ios:'', origin:'◌', nature:'🌿', realme:'◉', hyper:'✧', gaming:'🎮', oxygen:'⚡', oneui:'🔵', nothing:'⚪', pixel:'💎', rog:'👺'};
+    const logoEl = document.getElementById('os-brand-logo');
+    if(logoEl) logoEl.innerText = logos[os] || '◌';
+
+    const natureLayer = document.getElementById('natureLiveLayer');
+    const natureMusic = document.getElementById('natureMusic');
+
+    if (os === 'nature') {
+        if(natureLayer) natureLayer.classList.remove('hidden');
+        if(natureMusic) natureMusic.play().catch(() => {});
+        if(typeof startLeaves === 'function') startLeaves();
+    } else {
+        if(natureLayer) natureLayer.classList.add('hidden');
+        if(natureMusic) { natureMusic.pause(); natureMusic.currentTime = 0; }
+    }
+
+    if(osMenu) osMenu.classList.add('hidden');
+    const active = [loginView, galleryView, secretView].find(v => v && !v.classList.contains('hidden'));
+    if(active) triggerAnim(active);
+}
 
         function triggerAnim(el) {
             if(!el) return;
@@ -979,6 +1007,18 @@ function openAdmin() {
 
 function closeAdmin() {
     document.getElementById('adminPanel').style.display = 'none';
+}
+function startLeaves() {
+    const container = document.getElementById('leafContainer');
+    if(!container || container.children.length > 0) return; 
+    for (let i = 0; i < 15; i++) {
+        const leaf = document.createElement('div');
+        leaf.className = 'leaf';
+        leaf.style.left = Math.random() * 100 + 'vw';
+        leaf.style.animationDuration = (Math.random() * 5 + 5) + 's';
+        leaf.style.animationDelay = Math.random() * 5 + 's';
+        container.appendChild(leaf);
+    }
 }
     </script>
 </body>
