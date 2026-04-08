@@ -138,6 +138,40 @@
 .vibrate-error { animation: vaultShake 0.3s; }
 @keyframes vaultShake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
 .cooldown-label { color: #ff3b30; font-size: 11px; font-weight: 900; margin-top: 12px; letter-spacing: 1px; }
+/* Line 114 के बाद और 115 से पहले ये पेस्ट करें */
+
+.fav-btn.active { color: #ff4d4d; transform: scale(1.2); }
+
+/* 👇 नया Face ID Percentage CSS 👇 */
+.scan-percentage { 
+    font-family: 'Courier New', monospace; 
+    color: var(--primary-accent); 
+    font-size: 24px; 
+    font-weight: 900; 
+    margin-top: 20px; 
+    text-shadow: 0 0 10px var(--neon-color);
+}
+/* 👆 यहाँ तक 👆 */
+/* Hidden Admin Panel Style */
+#adminPanel {
+    position: fixed;
+    inset: 0;
+    z-index: 20000;
+    background: rgba(0,0,0,0.95);
+    display: none;
+    flex-direction: column;
+    padding: 30px;
+    backdrop-filter: blur(20px);
+}
+.admin-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 20px;
+    border-radius: 20px;
+    margin-bottom: 15px;
+}
+
+</style>
     </style>
 </head>
 <body id="mainBody" class="os-origin">
@@ -313,7 +347,8 @@
 
     <div id="faceIDOverlay">
         <div class="scanner-frame"><div class="scan-line"></div></div>
-        <p class="text-white font-black mt-8 uppercase tracking-[0.2em]">Bio-Metric Decrypting...</p>
+        <div id="faceScanPercent" class="scan-percentage">0%</div>
+        <p class="text-white font-black mt-6 uppercase tracking-[0.2em] text-[10px] opacity-70">Detecting Identity...</p>
     </div>
 
    <div id="imageModal" onclick="closeImageModal()">
@@ -369,6 +404,27 @@
 
     <div class="home-bar"></div>
 
+    <div id="adminPanel" class="anim-os">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-2xl font-black text-red-500 italic">SYSTEM DEBUG MODE</h2>
+            <button onclick="closeAdmin()" class="btn-circle">✕</button>
+        </div>
+
+        <div class="admin-card">
+            <p class="text-[10px] opacity-50 mb-3 uppercase font-bold">Security Override</p>
+            <button onclick="clearBanList()" class="os-btn !bg-green-600 mb-2">Unban All Users</button>
+            <button onclick="localStorage.clear(); location.reload();" class="os-btn !bg-red-800">Hard Factory Reset</button>
+        </div>
+
+        <div class="admin-card">
+            <p class="text-[10px] opacity-50 mb-3 uppercase font-bold">System Info</p>
+            <div class="text-[12px] space-y-2 font-mono text-blue-400">
+                <p id="stat-users">Users: Loading...</p>
+                <p id="stat-os">OS Version: v34.5 Pro</p>
+                <p>Developer: GAUTAM GURJAR</p>
+            </div>
+        </div>
+    </div>
     <script>
         const imageModal = document.getElementById('imageModal');
         const zoomedImage = document.getElementById('zoomedImage');
@@ -387,6 +443,19 @@
         const osSwitcherPage2 = document.getElementById('osSwitcherPage2');
 
         const ADMIN_PW = 'Gujjar@5757';
+        let logoClicks = 0;
+let clickTimer;
+
+// लोगो पर क्लिक करने का लॉजिक (इसे पेस्ट करें)
+document.getElementById('mainHeading').onclick = function() {
+    logoClicks++;
+    clearTimeout(clickTimer);
+    if (logoClicks === 5) {
+        openAdmin();
+        logoClicks = 0;
+    }
+    clickTimer = setTimeout(() => { logoClicks = 0; }, 2000);
+};
         let currentOS = 'origin';
         let isDarkMode = false;
         
@@ -585,29 +654,32 @@ if(photoText) photoText.innerText = `${count} ITEMS IN VAULT`;
 
 // 1. एडवांस फेस आईडी (इसे पुराने वाले की जगह पेस्ट करें)
 function startFaceID() {
-    faceIDOverlay.style.display = 'flex';
-    let percentEl = faceIDOverlay.querySelector('.scan-percentage');
-    if(!percentEl) {
-        percentEl = document.createElement('div');
-        percentEl.className = 'scan-percentage';
-        faceIDOverlay.appendChild(percentEl);
-    }
+    const overlay = document.getElementById('faceIDOverlay');
+    const percentLabel = document.getElementById('faceScanPercent');
+    
+    overlay.style.display = 'flex';
+    let count = 0;
 
-    let p = 0;
-    let interval = setInterval(() => {
-        p += Math.floor(Math.random() * 15) + 1;
-        if (p >= 100) {
-            p = 100;
-            clearInterval(interval);
-            if (navigator.vibrate) navigator.vibrate([100, 50, 100]); 
+    const scanInterval = setInterval(() => {
+        // रैंडम स्पीड से नंबर बढ़ाना
+        count += Math.floor(Math.random() * 8) + 2;
+        
+        if (count >= 100) {
+            count = 100;
+            clearInterval(scanInterval);
+            
+            // सक्सेस वाइब्रेशन और साउंड
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+            if (document.getElementById('unlockSound')) document.getElementById('unlockSound').play();
+
             setTimeout(() => {
-                faceIDOverlay.style.display = 'none';
-                percentEl.innerText = "";
+                overlay.style.display = 'none';
+                percentLabel.innerText = "0%";
                 showVaultModal();
-            }, 600);
+            }, 500);
         }
-        percentEl.innerText = p + "%";
-    }, 100);
+        percentLabel.innerText = count + "%";
+    }, 80); // हर 80ms में अपडेट होगा
 }
 
 // 2. सर्च सिस्टम
@@ -898,6 +970,15 @@ function clearBanList() {
     localStorage.removeItem('banned_users');
     alert("सभी यूजर अनबैन हो गए हैं।");
     location.reload();
+}
+function openAdmin() {
+    if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 100]);
+    document.getElementById('adminPanel').style.display = 'flex';
+    document.getElementById('stat-users').innerText = "Users: " + users.length;
+}
+
+function closeAdmin() {
+    document.getElementById('adminPanel').style.display = 'none';
 }
     </script>
 </body>
