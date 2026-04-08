@@ -86,7 +86,7 @@
 
         #bootScreen { position: fixed; inset: 0; background: black; z-index: 100000; display: none; flex-direction: column; align-items: center; justify-content: center; color: white; }
         .boot-bar { width: 180px; height: 4px; background: #222; border-radius: 2px; margin-top: 25px; overflow: hidden; }
-        .boot-fill { height: 100%; background: var(--primary-accent); width: 0%; transition: 2.5s linear; }
+        .boot-fill { height: 100%; background: var(--primary-accent); width: 0%; transition: 8s linear; }
 
         #imageModal { position: fixed; inset: 0; z-index: 15000; background: rgba(0,0,0,0.98); display: none; align-items: center; justify-content: center; }
         #zoomedImage { max-width: 100%; max-height: 100%; transition: transform 0.1s linear; will-change: transform; pointer-events: auto; }
@@ -104,10 +104,43 @@
         
         .anim-os { animation: fadeInScale 0.4s var(--anim-curve); }
         @keyframes fadeInScale { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        #bootScreen { 
+    pointer-events: auto !important; 
+    z-index: 100000;
+}
+
+#bootScreen a { 
+    pointer-events: auto !important; 
+    cursor: pointer;
+}
+/* लगभग Line 100 के पास पेस्ट करें */
+.slideshow-active { position: fixed; inset: 0; z-index: 20000; background: black; display: flex; align-items: center; justify-content: center; }
+.scan-percentage { font-family: monospace; color: var(--primary-accent); font-size: 20px; font-weight: 900; margin-top: 15px; }
+.search-container { padding: 10px 16px; margin-top: 10px; }
+.search-input { width: 100%; background: var(--glass-bg); border: 1.5px solid rgba(255,255,255,0.2); border-radius: 15px; padding: 12px 20px; color: var(--text-color); outline: none; backdrop-filter: blur(10px); font-size: 14px; }
+/* Vault Lock & Timer Styles */
+.lock-screen { filter: grayscale(1) blur(5px); pointer-events: none; transition: 0.5s; }
+.cooldown-text { color: #ff4d4d; font-size: 12px; font-weight: 900; margin-top: 10px; display: none; }
+.vibrate-error { animation: shake 0.3s; }
+/* Favorite Heart Icon Style */
+.fav-btn { 
+    position: absolute; 
+    top: 8px; 
+    right: 8px; 
+    font-size: 16px; 
+    z-index: 10; 
+    transition: 0.3s;
+    filter: drop-shadow(0 0 3px rgba(0,0,0,0.5));
+}
+.fav-btn.active { color: #ff4d4d; transform: scale(1.2); }
     </style>
 </head>
 <body id="mainBody" class="os-origin">
 
+    <audio id="bootSound" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3" preload="auto"></audio>
+    <audio id="clickSound" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" preload="auto"></audio>
+    <audio id="unlockSound" src="https://assets.mixkit.co/active_storage/sfx/2530/2530-preview.mp3" preload="auto"></audio>
+    <audio id="errorSound" src="https://assets.mixkit.co/active_storage/sfx/2573/2573-preview.mp3" preload="auto"></audio>
     <div class="liquid-bg" id="wallpaperLayer">
         <div class="blob" style="top:-10%; left:-10%;"></div>
         <div class="blob" style="bottom:-10%; right:20%;"></div>
@@ -131,8 +164,7 @@
         <div class="btn-circle shadow-lg" id="switcherBtn" onclick="toggleOSMenu()">💠</div>
     </div>
 
-    <!-- Page 2 Switcher -->
-    <div id="osSwitcherPage2" class="hidden">
+    <div id="osSwitcherPage2" class="hidden" style="position: fixed; top: 85px; right: 16px; z-index: 9500;">
         <div class="btn-circle shadow-lg" onclick="toggleOSMenu()">💠</div>
     </div>
 
@@ -153,10 +185,31 @@
     </div>
 
     <!-- BOOT SCREEN -->
-    <div id="bootScreen">
-        <h2 class="text-[10px] font-black tracking-[0.5em] uppercase opacity-80">Initializing Secure System</h2>
-        <div class="boot-bar"><div class="boot-fill" id="bootProgress"></div></div>
+    <div id="bootScreen" class="text-center px-4">
+    <h2 class="text-[15px] font-black tracking-wider uppercase mb-5 italic text-blue-400">
+        Contact us for build your own website
+    </h2>
+    
+    <div class="flex flex-col gap-3 mb-8 items-center">
+        <a href="https://wa.me/917027839683" target="_blank" style="pointer-events: auto;" class="flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-3 rounded-2xl w-full max-w-[280px] active:scale-95 transition-transform">
+            <span class="text-[10px] font-black text-green-500">WHATSAPP:</span>
+            <span class="text-[11px] font-medium tracking-widest text-white/80">+91 7027839683</span>
+        </a>
+        
+        <a href="https://instagram.com/gautam.gurjar.712" target="_blank" style="pointer-events: auto;" class="flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-3 rounded-2xl w-full max-w-[280px] active:scale-95 transition-transform">
+            <span class="text-[10px] font-black text-pink-500">INSTAGRAM:</span>
+            <span class="text-[11px] font-medium text-white/80">@gautam.gurjar.712</span>
+        </a>
+        
+        <a href="https://t.me/Gautam_GUJJAR" target="_blank" style="pointer-events: auto;" class="flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-3 rounded-2xl w-full max-w-[280px] active:scale-95 transition-transform">
+            <span class="text-[10px] font-black text-blue-500">TELEGRAM:</span>
+            <span class="text-[11px] font-medium text-white/80">@Gautam_GUJJAR</span>
+        </a>
     </div>
+
+    <div class="boot-bar"><div class="boot-fill" id="bootProgress"></div></div>
+    <p class="text-[8px] mt-4 opacity-30 tracking-[0.4em] uppercase italic">Click to connect while booting...</p>
+</div>
 
     <!-- VIEW 1: LOGIN -->
     <div id="loginView" class="view-container active flex flex-col items-center justify-center px-6 anim-os">
@@ -178,17 +231,40 @@
     <!-- VIEW 2: GALLERY -->
     <div id="galleryView" class="view-container hidden anim-os">
         <div class="sticky-header">
-            <div class="flex justify-between items-end mb-4">
+            <div class="search-container">
+                <input type="text" id="gallerySearch" placeholder="Search photos..." class="search-input" oninput="handleSearch(this.value)">
+            </div>
+            
+            <div class="flex justify-between items-end mb-4 px-4">
                 <div>
                     <h1 id="galleryTitle" class="text-3xl font-black uppercase leading-none">Vault</h1>
                     <p class="text-[8px] font-black opacity-50 uppercase mt-1 tracking-widest">Authenticated</p>
                 </div>
-                <button onclick="startFaceID()" class="os-btn !bg-black px-4 py-2 text-[10px] w-auto border border-white/20 active:scale-90">
-                    Private Vault 🔒
-                </button>
+                <div class="flex gap-2">
+                    <button onclick="startSlideshow()" class="btn-circle !w-10 !h-10 text-sm">▶️</button>
+                    <button onclick="startFaceID()" class="os-btn !bg-black px-4 py-2 text-[10px] w-auto border border-white/20 active:scale-90">
+                        Private Vault 🔒
+                    </button>
+                </div>
             </div>
+            <div class="px-4 mt-4" id="storageDashboard">
+                <div class="glass-panel p-4 flex justify-between items-center border border-white/5">
+                    <div>
+                        <p class="text-[9px] font-black opacity-40 uppercase">OS Storage Status</p>
+                        <h4 class="text-sm font-black text-blue-400" id="photoCountText">Loading Stats...</h4>
+                    </div>
+                    <div class="text-right">
+                        <div class="w-24 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                            <div class="bg-blue-500 h-full w-[65%]"></div>
+                        </div>
+                        <p class="text-[8px] mt-1 opacity-50 font-bold uppercase">65% Used</p>
+                    </div>
+                </div>
+            </div>
+
             <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" id="categoryBar"></div>
         </div>
+        
         <div class="grid grid-cols-2 gap-3 px-4 py-6 gallery-grid" id="gallery-grid"></div>
     </div>
 
@@ -235,16 +311,23 @@
         <p class="text-white font-black mt-8 uppercase tracking-[0.2em]">Bio-Metric Decrypting...</p>
     </div>
 
-    <div id="imageModal" onclick="closeImageModal()">
-        <div class="zoom-ui-overlay">
-            <div class="zoom-btn-circle" onclick="applyZoomBtn(1.6, event)">+</div>
-            <div class="zoom-btn-circle" onclick="applyZoomBtn(0.6, event)">−</div>
-            <div class="zoom-btn-circle" onclick="downloadImage(event)">💾</div>
-            <div class="zoom-btn-circle" onclick="resetZoom(event)">↺</div>
-            <div class="zoom-btn-circle" onclick="closeImageModal()">✕</div>
-        </div>
-        <img id="zoomedImage" src="" alt="Zoomed" onclick="event.stopPropagation()">
+   <div id="imageModal" onclick="closeImageModal()">
+    <div class="zoom-ui-overlay">
+        <div class="zoom-btn-circle" onclick="applyZoomBtn(1.6, event)">+</div>
+        <div class="zoom-btn-circle" onclick="applyZoomBtn(0.6, event)">−</div>
+        <div class="zoom-btn-circle" onclick="downloadImage(event)">💾</div>
+        <div class="zoom-btn-circle" onclick="resetZoom(event)">↺</div>
+        <div class="zoom-btn-circle" onclick="closeImageModal()">✕</div>
     </div>
+
+    <div id="infoPanel" class="absolute top-[80px] left-1/2 -translate-x-1/2 glass-panel p-3 text-[10px] text-white/70 font-bold hidden z-50 shadow-xl border border-white/10 rounded-xl" onclick="event.stopPropagation()">
+        <p>RESOLUTION: 800x800</p>
+        <p>SIZE: 256 KB</p>
+        <p>TAGS: #JODHPUR #GHH</p>
+    </div>
+
+    <img id="zoomedImage" src="" alt="Zoomed" onclick="event.stopPropagation()">
+</div>
 
     <div id="customModal" class="modal-overlay" onclick="closeCustomizeModal()">
         <div class="glass-panel p-6 w-full max-w-[380px] m-4" onclick="event.stopPropagation()">
@@ -382,18 +465,28 @@
             const u = document.getElementById('username').value, p = document.getElementById('password').value;
             const valid = users.find(user => user.u === u && user.p === p);
             if (valid) {
-                document.getElementById('bootScreen').style.display = 'flex';
+    // साउंड और वाइब्रेशन एक साथ
+    document.getElementById('bootSound').play();
+    if (navigator.vibrate) navigator.vibrate(100); 
+
+    document.getElementById('bootScreen').style.display = 'flex';
                 setTimeout(() => document.getElementById('bootProgress').style.width = '100%', 50);
                 setTimeout(() => {
                     document.getElementById('bootScreen').style.display = 'none';
+                    
+                    // व्यूज को स्विच करें
                     loginView.classList.add('hidden');
                     loginControls.classList.add('hidden'); 
+                    
                     osSwitcherPage2.classList.remove('hidden'); 
                     galleryView.classList.remove('hidden');
                     mainDockContainer.classList.remove('hidden');
+                    
                     triggerAnim(galleryView);
+                    
+                    // फोटो लोड करने की कमांड (Most Important)
                     renderGrid('gallery-grid', imageLib.JODHPUR);
-                }, 2600);
+                }, 8200); // लाइन की स्पीड के हिसाब से इसे 8200 (8.2s) किया है
             } else { 
                 // Simple error message instead of alert
                 document.getElementById('username').style.borderColor = 'red';
@@ -450,26 +543,102 @@
             const grid = document.getElementById(containerId);
             if(!grid) return;
             grid.innerHTML = '';
-            images.forEach(url => {
+           images.forEach(url => {
+                const isFav = favorites.includes(url); // चेक करें कि क्या यह पहले से फेवरेट है
                 const div = document.createElement('div');
-                div.className = `gallery-item glass-panel`;
-                div.innerHTML = `<img src="${url}" class="w-full h-full object-cover" loading="lazy" onclick="openImageModal('${url}')">`;
+                div.className = `gallery-item glass-panel relative`;
+                div.innerHTML = `
+                    <div class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${url}', event)">
+                        ${isFav ? '❤️' : '🤍'}
+                    </div>
+                    <img src="${url}" class="w-full h-full object-cover" loading="lazy" onclick="openImageModal('${url}')">
+                `;
                 grid.appendChild(div);
             });
+
+// डैशबोर्ड पर फोटो की संख्या अपडेट करने के लिए
+const count = images.length;
+const photoText = document.getElementById('photoCountText');
+if(photoText) photoText.innerText = `${count} ITEMS IN VAULT`;
         }
 
-        function startFaceID() {
-            faceIDOverlay.style.display = 'flex';
+        // --- PRO FEATURES START ---
+
+// 1. एडवांस फेस आईडी (इसे पुराने वाले की जगह पेस्ट करें)
+function startFaceID() {
+    faceIDOverlay.style.display = 'flex';
+    let percentEl = faceIDOverlay.querySelector('.scan-percentage');
+    if(!percentEl) {
+        percentEl = document.createElement('div');
+        percentEl.className = 'scan-percentage';
+        faceIDOverlay.appendChild(percentEl);
+    }
+
+    let p = 0;
+    let interval = setInterval(() => {
+        p += Math.floor(Math.random() * 15) + 1;
+        if (p >= 100) {
+            p = 100;
+            clearInterval(interval);
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100]); 
             setTimeout(() => {
                 faceIDOverlay.style.display = 'none';
+                percentEl.innerText = "";
                 showVaultModal();
-            }, 2000);
+            }, 600);
         }
+        percentEl.innerText = p + "%";
+    }, 100);
+}
+
+// 2. सर्च सिस्टम
+function handleSearch(query) {
+    const allImages = imageLib.JODHPUR;
+    const filtered = allImages.filter((url, index) => 
+        index.toString().includes(query) || url.toLowerCase().includes(query.toLowerCase())
+    );
+    renderGrid('gallery-grid', query ? filtered : allImages);
+}
+
+// 3. ऑटो स्लाइडशो
+let slideshowInterval;
+function startSlideshow() {
+    let index = 0;
+    const images = imageLib.JODHPUR;
+    const slideshowDiv = document.createElement('div');
+    slideshowDiv.className = 'slideshow-active anim-os';
+    slideshowDiv.innerHTML = `
+        <img id="slideImg" src="${images[0]}" class="max-h-[90%] max-w-[95%] object-contain rounded-2xl shadow-2xl">
+        <div class="fixed top-10 right-10">
+            <button onclick="stopSlideshow(this)" class="btn-circle shadow-lg !bg-white/20 !backdrop-blur-md">✕</button>
+        </div>`;
+    document.body.appendChild(slideshowDiv);
+
+    slideshowInterval = setInterval(() => {
+        index = (index + 1) % images.length;
+        const img = document.getElementById('slideImg');
+        if(img) {
+            img.src = images[index];
+            triggerAnim(img);
+        }
+    }, 3000); 
+}
+
+function stopSlideshow(btn) {
+    clearInterval(slideshowInterval);
+    btn.closest('.slideshow-active').remove();
+}
+// --- PRO FEATURES END ---
         function showVaultModal() { vaultModal.style.display = 'flex'; document.getElementById('vaultPassword').focus(); }
         function hideVaultModal() { vaultModal.style.display = 'none'; }
         
         function unlockVault() {
-            if(document.getElementById('vaultPassword').value === ADMIN_PW) {
+            const passInput = document.getElementById('vaultPassword');
+            if(passInput.value === ADMIN_PW) {
+                // अनलॉक साउंड और वाइब्रेशन
+                if(document.getElementById('unlockSound')) document.getElementById('unlockSound').play();
+                if (navigator.vibrate) navigator.vibrate([50, 50, 50]); 
+
                 hideVaultModal(); 
                 galleryView.classList.add('hidden');
                 osSwitcherPage2.classList.add('hidden');
@@ -480,6 +649,10 @@
                 renderGrid('secret-grid', secretPics);
                 document.getElementById('vaultPassword').value = '';
             } else { 
+                // एरर साउंड और वाइब्रेशन
+                if(document.getElementById('errorSound')) document.getElementById('errorSound').play();
+                if (navigator.vibrate) navigator.vibrate(300); 
+
                 document.getElementById('vaultPassword').style.borderColor = 'red';
                 setTimeout(() => document.getElementById('vaultPassword').style.borderColor = '', 1000);
             }
@@ -499,7 +672,28 @@
         function openCustomizeModal() { customModal.style.display = 'flex'; }
         function closeCustomizeModal() { customModal.style.display = 'none'; }
 
-        function openImageModal(url) { zoomedImage.src = url; imageModal.style.display = 'flex'; resetZoom(); }
+        // --- Updated Image Opener (पुराने फीचर्स के साथ) ---
+function openImageModal(url) {
+    // 1. फोटो की लिंक सेट करें (पुराना फीचर)
+    zoomedImage.src = url;
+    
+    // 2. मोडल को दिखाएं (पुराना फीचर)
+    imageModal.style.display = 'flex';
+    
+    // 3. नया इन्फो पैनल दिखाएं (New!)
+    const infoPanel = document.getElementById('infoPanel');
+    if(infoPanel) infoPanel.classList.remove('hidden'); 
+    
+    // 4. ज़ूम को रीसेट करें ताकि फोटो सही दिखे (पुराना फीचर)
+    resetZoom(); 
+}
+
+// जब फोटो बंद हो, तो इन्फो पैनल को भी छुपाना ज़रूरी है (closeImageModal को अपडेट करें)
+function closeImageModal() {
+    imageModal.style.display = 'none';
+    const infoPanel = document.getElementById('infoPanel');
+    if(infoPanel) infoPanel.classList.add('hidden'); // New!
+}
         function closeImageModal() { imageModal.style.display = 'none'; }
         function resetZoom(e) { if(e) e.stopPropagation(); scale = 1; translateX = 0; translateY = 0; updateTransform(); }
         function updateTransform() { zoomedImage.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`; }
@@ -567,6 +761,66 @@
             initCategoryBar(); 
             triggerAnim(loginView);
         };
+        // --- GESTURE CONTROLS (Swipe to Next/Prev) ---
+let touchstartX = 0;
+let touchendX = 0;
+
+function handleGesture() {
+    const images = imageLib.JODHPUR;
+    let currentSrc = zoomedImage.src;
+    let currentIndex = images.indexOf(currentSrc);
+
+    // बाएँ स्वाइप (Next Photo)
+    if (touchendX < touchstartX - 70) {
+        let nextIndex = (currentIndex + 1) % images.length;
+        openImageModal(images[nextIndex]);
+    }
+    // दाएँ स्वाइप (Previous Photo)
+    if (touchendX > touchstartX + 70) {
+        let prevIndex = (currentIndex - 1 + images.length) % images.length;
+        openImageModal(images[prevIndex]);
+    }
+}
+
+// ज़ूम मोडल पर टच इवेंट्स जोड़ना (पुराने ज़ूम को बिना खराब किए)
+imageModal.addEventListener('touchstart', e => {
+    touchstartX = e.changedTouches[0].screenX;
+}, { passive: true });
+
+imageModal.addEventListener('touchend', e => {
+    touchendX = e.changedTouches[0].screenX;
+    if (scale === 1) handleGesture(); // सिर्फ तभी स्वाइप होगा जब फोटो ज़ूम न हो
+}, { passive: true });
+// हर बटन या डॉक टच पर साउंड और वाइब्रेशन
+        document.addEventListener('click', (e) => {
+            const isBtn = e.target.closest('button') || e.target.closest('.dock-item') || e.target.closest('.btn-circle');
+            if (isBtn) {
+                if (navigator.vibrate) navigator.vibrate(15);
+                const cSound = document.getElementById('clickSound');
+                if(cSound) {
+                    cSound.currentTime = 0;
+                    cSound.play();
+                }
+            }
+        });
+        // --- FAVORITE SYSTEM LOGIC ---
+let favorites = JSON.parse(localStorage.getItem('ghh_favs')) || [];
+
+function toggleFavorite(url, event) {
+    event.stopPropagation(); // ताकि फोटो बड़ी न हो, सिर्फ लाइक हो
+    if (favorites.includes(url)) {
+        favorites = favorites.filter(f => f !== url); // अन-लाइक करें
+    } else {
+        favorites.push(url); // लाइक करें
+        if (navigator.vibrate) navigator.vibrate(50); // हल्का वाइब्रेशन
+    }
+    localStorage.setItem('ghh_favs', JSON.stringify(favorites));
+    
+    // वर्तमान में जो भी ग्रिड खुला है उसे रिफ्रेश करें
+    const activeChip = document.querySelector('.category-chip.active');
+    const currentCat = activeChip ? activeChip.innerText : 'JODHPUR';
+    renderGrid('gallery-grid', imageLib[currentCat] || imageLib.JODHPUR);
+}
     </script>
 </body>
 </html>
