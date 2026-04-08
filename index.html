@@ -133,6 +133,11 @@
     filter: drop-shadow(0 0 3px rgba(0,0,0,0.5));
 }
 .fav-btn.active { color: #ff4d4d; transform: scale(1.2); }
+/* Vault Lock & Timer Styles */
+.lock-screen-blur { filter: grayscale(1) blur(15px); pointer-events: none; transition: 0.8s; }
+.vibrate-error { animation: vaultShake 0.3s; }
+@keyframes vaultShake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+.cooldown-label { color: #ff3b30; font-size: 11px; font-weight: 900; margin-top: 12px; letter-spacing: 1px; }
     </style>
 </head>
 <body id="mainBody" class="os-origin">
@@ -347,10 +352,16 @@
                 <p class="text-[9px] font-black uppercase mb-2 opacity-60 text-center">Identity Management</p>
                 <input type="text" id="newUsernameInput" placeholder="New ID" class="os-input mb-2 text-sm">
                 <input type="password" id="newPasswordInput" placeholder="Key" class="os-input text-sm">
-                <div class="flex gap-2 mt-3">
-                    <button onclick="addUser()" class="os-btn flex-1 py-2 text-[10px]">ADD USER</button>
-                    <button onclick="clearUsers()" class="os-btn flex-1 py-2 text-[10px] !bg-red-500">RESET</button>
-                </div>
+                <div class="flex flex-col gap-2 mt-3">
+    <div class="flex gap-2">
+        <button onclick="addUser()" class="os-btn flex-1 py-2 text-[10px]">ADD USER</button>
+        <button onclick="clearUsers()" class="os-btn flex-1 py-2 text-[10px] !bg-orange-500">RESET USERS</button>
+    </div>
+    <div class="flex gap-2">
+        <button onclick="banUser(document.getElementById('newUsernameInput').value)" class="os-btn flex-1 py-2 text-[10px] !bg-red-600">🔴 BAN ID</button>
+        <button onclick="clearBanList()" class="os-btn flex-1 py-2 text-[10px] !bg-green-600">🟢 UNBAN ALL</button>
+    </div>
+</div>
             </div>
             <button onclick="saveSystem()" class="os-btn py-3 text-xs shadow-lg">Commit Updates</button>
         </div>
@@ -465,10 +476,18 @@
             const u = document.getElementById('username').value, p = document.getElementById('password').value;
             const valid = users.find(user => user.u === u && user.p === p);
             if (valid) {
-    // साउंड और वाइब्रेशन एक साथ
-    document.getElementById('bootSound').play();
-    if (navigator.vibrate) navigator.vibrate(100); 
+    // 👇 यहाँ से नया बैन लॉजिक शुरू 👇
+    const bannedUsers = JSON.parse(localStorage.getItem('banned_users')) || [];
+    if (bannedUsers.includes(u)) {
+        if(document.getElementById('errorSound')) document.getElementById('errorSound').play();
+        if (navigator.vibrate) navigator.vibrate(500); // लंबा वाइब्रेशन
+        alert("🚨 ACCESS DENIED: Your account has been BANNED!");
+        return; // यहीं से कोड रुक जाएगा, लॉगिन नहीं होगा
+    }
+    // 👆 बैन लॉजिक खत्म 👆
 
+    if(document.getElementById('bootSound')) document.getElementById('bootSound').play();
+    if (navigator.vibrate) navigator.vibrate(100); 
     document.getElementById('bootScreen').style.display = 'flex';
                 setTimeout(() => document.getElementById('bootProgress').style.width = '100%', 50);
                 setTimeout(() => {
@@ -632,10 +651,18 @@ function stopSlideshow(btn) {
         function showVaultModal() { vaultModal.style.display = 'flex'; document.getElementById('vaultPassword').focus(); }
         function hideVaultModal() { vaultModal.style.display = 'none'; }
         
+        let wrongAttempts = 0;
+        let isVaultLocked = false;
+
         function unlockVault() {
+            if (isVaultLocked) return;
+
             const passInput = document.getElementById('vaultPassword');
-            if(passInput.value === ADMIN_PW) {
-                // अनलॉक साउंड और वाइब्रेशन
+            const unlockBtn = document.querySelector('#vaultModal .os-btn');
+
+            if (passInput.value === ADMIN_PW) {
+                // SUCCESS
+                wrongAttempts = 0;
                 if(document.getElementById('unlockSound')) document.getElementById('unlockSound').play();
                 if (navigator.vibrate) navigator.vibrate([50, 50, 50]); 
 
@@ -647,15 +674,49 @@ function stopSlideshow(btn) {
                 secretView.classList.remove('hidden'); 
                 triggerAnim(secretView);
                 renderGrid('secret-grid', secretPics);
-                document.getElementById('vaultPassword').value = '';
+                passInput.value = '';
             } else { 
-                // एरर साउंड और वाइब्रेशन
+                // ERROR
+                wrongAttempts++;
                 if(document.getElementById('errorSound')) document.getElementById('errorSound').play();
-                if (navigator.vibrate) navigator.vibrate(300); 
+                if (navigator.vibrate) navigator.vibrate(400); 
 
-                document.getElementById('vaultPassword').style.borderColor = 'red';
-                setTimeout(() => document.getElementById('vaultPassword').style.borderColor = '', 1000);
+                passInput.classList.add('vibrate-error');
+                passInput.style.borderColor = 'red';
+                setTimeout(() => {
+                    passInput.classList.remove('vibrate-error');
+                    passInput.style.borderColor = '';
+                }, 400);
+
+                // Check for 3 Wrong Attempts
+                if (wrongAttempts >= 3) {
+                    lockVaultSystem(unlockBtn, passInput);
+                }
             }
+        }
+
+        function lockVaultSystem(btn, input) {
+            isVaultLocked = true;
+            input.disabled = true;
+            input.value = "";
+            document.getElementById('galleryView').classList.add('lock-screen-blur');
+            
+            let timeLeft = 30; // 30 सेकंड का लॉक
+            const timerInterval = setInterval(() => {
+                btn.innerText = `LOCKED (${timeLeft}s)`;
+                btn.classList.add('!bg-gray-600');
+                timeLeft--;
+
+                if (timeLeft < 0) {
+                    clearInterval(timerInterval);
+                    isVaultLocked = false;
+                    wrongAttempts = 0;
+                    input.disabled = false;
+                    btn.innerText = "UNLOCK";
+                    btn.classList.remove('!bg-gray-600');
+                    document.getElementById('galleryView').classList.remove('lock-screen-blur');
+                }
+            }, 1000);
         }
         
         function exitSecretView() { 
@@ -820,6 +881,23 @@ function toggleFavorite(url, event) {
     const activeChip = document.querySelector('.category-chip.active');
     const currentCat = activeChip ? activeChip.innerText : 'JODHPUR';
     renderGrid('gallery-grid', imageLib[currentCat] || imageLib.JODHPUR);
+}
+// यूजर को बैन करने के लिए
+function banUser(name) {
+    let list = JSON.parse(localStorage.getItem('banned_users')) || [];
+    if (!list.includes(name)) {
+        list.push(name);
+        localStorage.setItem('banned_users', JSON.stringify(list));
+        alert(name + " को बैन कर दिया गया है!");
+        location.reload(); 
+    }
+}
+
+// सबको अनबैन करने के लिए (बैकअप के लिए)
+function clearBanList() {
+    localStorage.removeItem('banned_users');
+    alert("सभी यूजर अनबैन हो गए हैं।");
+    location.reload();
 }
     </script>
 </body>
