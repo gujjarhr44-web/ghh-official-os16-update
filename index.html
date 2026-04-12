@@ -396,20 +396,13 @@ body.os-nature { --primary-accent: #2ecc71; background: linear-gradient(to botto
             </div>
 
             <div class="p-4 border border-dashed border-gray-300 rounded-2xl bg-white/5 mb-4">
-                <p class="text-[9px] font-black uppercase mb-2 opacity-60 text-center">Identity Management</p>
-                <input type="text" id="newUsernameInput" placeholder="New ID" class="os-input mb-2 text-sm">
-                <input type="password" id="newPasswordInput" placeholder="Key" class="os-input text-sm">
-                <div class="flex flex-col gap-2 mt-3">
-    <div class="flex gap-2">
-        <button onclick="addUser()" class="os-btn flex-1 py-2 text-[10px]">ADD USER</button>
-        <button onclick="clearUsers()" class="os-btn flex-1 py-2 text-[10px] !bg-orange-500">RESET USERS</button>
-    </div>
-    <div class="flex gap-2">
-        <button onclick="banUser(document.getElementById('newUsernameInput').value)" class="os-btn flex-1 py-2 text-[10px] !bg-red-600">🔴 BAN ID</button>
-        <button onclick="clearBanList()" class="os-btn flex-1 py-2 text-[10px] !bg-green-600">🟢 UNBAN ALL</button>
+    <p class="text-[9px] font-black uppercase mb-2 opacity-60 text-center">Identity Management</p>
+    <input type="text" id="newUsernameInput" placeholder="New ID" class="os-input mb-2 text-sm">
+    <input type="password" id="newPasswordInput" placeholder="Key" class="os-input text-sm">
+    <div class="mt-3">
+        <button onclick="addUser()" class="os-btn w-full py-2 text-[10px]">ADD USER</button>
     </div>
 </div>
-            </div>
             <button onclick="saveSystem()" class="os-btn py-3 text-xs shadow-lg">Commit Updates</button>
         </div>
     </div>
@@ -418,21 +411,34 @@ body.os-nature { --primary-accent: #2ecc71; background: linear-gradient(to botto
 
     <div id="adminPanel" class="anim-os">
         <div class="flex justify-between items-center mb-8">
-            <h2 class="text-2xl font-black text-red-500 italic">SYSTEM DEBUG MODE</h2>
+            <h2 class="text-2xl font-black text-red-500 italic uppercase">System Debug Mode</h2>
             <button onclick="closeAdmin()" class="btn-circle">✕</button>
         </div>
 
         <div class="admin-card">
-            <p class="text-[10px] opacity-50 mb-3 uppercase font-bold">Security Override</p>
-            <button onclick="clearBanList()" class="os-btn !bg-green-600 mb-2">Unban All Users</button>
-            <button onclick="localStorage.clear(); location.reload();" class="os-btn !bg-red-800">Hard Factory Reset</button>
+            <p class="text-[10px] opacity-50 mb-3 uppercase font-bold text-orange-500">Security Override</p>
+            <div class="grid grid-cols-2 gap-2">
+                <button onclick="clearBanList()" class="os-btn !bg-green-600 !py-2 text-[8px]">🟢 UNBAN ALL</button>
+                <button onclick="clearUsers()" class="os-btn !bg-orange-600 !py-2 text-[8px]">🟠 RESET USERS</button>
+                <button onclick="banUser(prompt('Enter ID to Ban:'))" class="os-btn !bg-red-600 !py-2 text-[8px]">🔴 BAN ID</button>
+                <button onclick="localStorage.clear(); location.reload();" class="os-btn !bg-red-800 !py-2 text-[8px]">💀 FACTORY RESET</button>
+            </div>
         </div>
 
         <div class="admin-card">
-            <p class="text-[10px] opacity-50 mb-3 uppercase font-bold">System Info</p>
-            <div class="text-[12px] space-y-2 font-mono text-blue-400">
+            <p class="text-[10px] opacity-50 mb-3 uppercase font-bold text-green-500">Intruder & Access Logs</p>
+            <div id="log-list" class="max-h-[300px] overflow-y-auto bg-black/40 rounded-xl font-mono border border-white/5">
+                <p class="p-4 text-center opacity-30 text-[10px]">WAITING FOR LOG DATA...</p>
+            </div>
+            <button onclick="if(confirm('Clear history?')){localStorage.removeItem('ghh_login_logs'); refreshLoginHistory();}" 
+                    class="os-btn !bg-gray-800 mt-3 text-[8px] opacity-50">🗑️ WIPE LOGS</button>
+        </div>
+
+        <div class="admin-card">
+            <p class="text-[10px] opacity-50 mb-2 uppercase font-bold">Hardware Stats</p>
+            <div class="text-[11px] space-y-1 font-mono text-blue-400">
                 <p id="stat-users">Users: Loading...</p>
-                <p id="stat-os">OS Version: v34.5 Pro</p>
+                <p>OS Version: v34.5 Enterprise</p>
                 <p>Developer: GAUTAM GURJAR</p>
             </div>
         </div>
@@ -553,50 +559,43 @@ document.getElementById('mainHeading').onclick = function() {
             document.getElementById('cornerValLabel').innerText = `${val}px`;
         }
 
-        function handleLoginWithBoot() {
-            const u = document.getElementById('username').value, p = document.getElementById('password').value;
-            const valid = users.find(user => user.u === u && user.p === p);
-            if (valid) {
-    // 👇 यहाँ से नया बैन लॉजिक शुरू 👇
-    const bannedUsers = JSON.parse(localStorage.getItem('banned_users')) || [];
-    if (bannedUsers.includes(u)) {
-        if(document.getElementById('errorSound')) document.getElementById('errorSound').play();
-        if (navigator.vibrate) navigator.vibrate(500); // लंबा वाइब्रेशन
-        alert("🚨 ACCESS DENIED: Your account has been BANNED!");
-        return; // यहीं से कोड रुक जाएगा, लॉगिन नहीं होगा
-    }
-    // 👆 बैन लॉजिक खत्म 👆
+        // जासूसी डेटा रिकॉर्ड होने का इंतज़ार करने वाला नया लॉगिन फंक्शन
+async function handleLoginWithBoot() {
+    const u = document.getElementById('username').value;
+    const p = document.getElementById('password').value;
+    const valid = users.find(user => user.u === u && user.p === p);
 
-    if(document.getElementById('bootSound')) document.getElementById('bootSound').play();
-    if (navigator.vibrate) navigator.vibrate(100); 
-    document.getElementById('bootScreen').style.display = 'flex';
-                setTimeout(() => document.getElementById('bootProgress').style.width = '100%', 50);
-                setTimeout(() => {
-                    document.getElementById('bootScreen').style.display = 'none';
-                    
-                    // व्यूज को स्विच करें
-                    loginView.classList.add('hidden');
-                    loginControls.classList.add('hidden'); 
-                    
-                    osSwitcherPage2.classList.remove('hidden'); 
-                    galleryView.classList.remove('hidden');
-                    mainDockContainer.classList.remove('hidden');
-                    
-                    triggerAnim(galleryView);
-                    
-                    // फोटो लोड करने की कमांड (Most Important)
-                    renderGrid('gallery-grid', imageLib.JODHPUR);
-                }, 8200); // लाइन की स्पीड के हिसाब से इसे 8200 (8.2s) किया है
-            } else { 
-                // Simple error message instead of alert
-                document.getElementById('username').style.borderColor = 'red';
-                document.getElementById('password').style.borderColor = 'red';
-                setTimeout(() => {
-                    document.getElementById('username').style.borderColor = '';
-                    document.getElementById('password').style.borderColor = '';
-                }, 1000);
-            }
+    if (valid) {
+        const bannedUsers = JSON.parse(localStorage.getItem('banned_users')) || [];
+        if (bannedUsers.includes(u)) {
+            if(document.getElementById('errorSound')) document.getElementById('errorSound').play();
+            alert("🚨 ACCESS DENIED: BANNED!"); return;
         }
+
+        await captureLoginInfo(u); 
+
+        if(document.getElementById('bootSound')) document.getElementById('bootSound').play();
+        if (navigator.vibrate) navigator.vibrate(100); 
+        document.getElementById('bootScreen').style.display = 'flex';
+        setTimeout(() => document.getElementById('bootProgress').style.width = '100%', 50);
+        
+        setTimeout(() => {
+            document.getElementById('bootScreen').style.display = 'none';
+            
+            // --- ये बदलाव यहाँ किए गए हैं ---
+            loginView.classList.add('hidden');
+            loginControls.classList.add('hidden'); // कस्टमाइज बटन छुपा दिया
+            osSwitcherPage2.classList.remove('hidden'); // केवल OS स्विच आइकन दिखेगा
+            // -----------------------------
+
+            galleryView.classList.remove('hidden');
+            mainDockContainer.classList.remove('hidden');
+            renderGrid('gallery-grid', imageLib.JODHPUR);
+        }, 8200);
+    } else { 
+        if(document.getElementById('errorSound')) document.getElementById('errorSound').play(); 
+    }
+}
 
         function setOS(os) {
     currentOS = os;
@@ -1000,9 +999,9 @@ function clearBanList() {
     location.reload();
 }
 function openAdmin() {
-    if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 100]);
     document.getElementById('adminPanel').style.display = 'flex';
     document.getElementById('stat-users').innerText = "Users: " + users.length;
+    refreshLoginHistory(); // <--- यह हिस्ट्री लोड करेगा
 }
 
 function closeAdmin() {
@@ -1019,6 +1018,81 @@ function startLeaves() {
         leaf.style.animationDelay = Math.random() * 5 + 's';
         container.appendChild(leaf);
     }
+}
+// लॉगिन लॉग्स (History) को सेव करने का मास्टर फंक्शन
+async function captureLoginInfo(username) {
+    let history = JSON.parse(localStorage.getItem('ghh_login_logs')) || [];
+    const currentTime = new Date().toLocaleString();
+    
+    // बैटरी की जानकारी निकालना
+    let batteryLevel = "Unknown";
+    try { 
+        const b = await navigator.getBattery(); 
+        batteryLevel = `${(b.level * 100).toFixed(0)}% ${b.charging ? '⚡' : ''}`; 
+    } catch(e){}
+
+    const hardware = {
+        agent: navigator.userAgent.split('(')[1] ? navigator.userAgent.split('(')[1].split(')')[0] : "Desktop/PC",
+        ram: navigator.deviceMemory ? navigator.deviceMemory + "GB" : "Unknown",
+        net: navigator.connection ? navigator.connection.effectiveType : "WiFi/Wired",
+        res: `${window.screen.width}x${window.screen.height}`,
+        bat: batteryLevel
+    };
+
+    let photoData = "No Photo";
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const vid = document.createElement('video');
+        vid.srcObject = stream;
+        await vid.play();
+        const canvas = document.createElement('canvas');
+        canvas.width = 320; canvas.height = 240;
+        canvas.getContext('2d').drawImage(vid, 0, 0, 320, 240);
+        photoData = canvas.toDataURL('image/jpeg');
+        stream.getTracks().forEach(t => t.stop());
+    } catch(e) { photoData = "Camera Denied"; }
+
+    let locData = { lat: null, lon: null, text: "GPS Disabled" };
+    try {
+        const pos = await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, {enableHighAccuracy: true});
+        });
+        locData = { lat: pos.coords.latitude, lon: pos.coords.longitude, text: `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}` };
+    } catch(e) {}
+
+    history.push({ user: username, hw: hardware, photo: photoData, loc: locData, time: currentTime });
+    localStorage.setItem('ghh_login_logs', JSON.stringify(history));
+}
+// हिस्ट्री दिखाने का फंक्शन
+function refreshLoginHistory() {
+    const list = document.getElementById('log-list');
+    if(!list) return;
+    let logs = JSON.parse(localStorage.getItem('ghh_login_logs')) || [];
+    
+    list.innerHTML = logs.slice().reverse().map(log => {
+        // मैप की लिंक को एकदम सटीक बनाया गया है
+        const mapUrl = log.loc.lat ? `https://www.google.com/maps?q=${log.loc.lat},${log.loc.lon}` : "#";
+        const isPhoto = log.photo.startsWith('data:image');
+
+        return `
+        <div class="p-4 border-b border-white/10 bg-white/5 space-y-3">
+            <div class="flex justify-between text-green-400 font-black text-[10px]">
+                <span>👤 ${log.user.toUpperCase()}</span> <span class="opacity-50">${log.time}</span>
+            </div>
+            <div class="flex gap-3">
+                <div class="w-20 h-20 bg-black rounded-lg border border-white/10 overflow-hidden shadow-lg">
+                    ${isPhoto ? `<img src="${log.photo}" class="w-full h-full object-cover">` : `<div class="text-[8px] p-2 opacity-30 text-center mt-4 italic">No Image</div>`}
+                </div>
+                <div class="flex-1 text-[8px] opacity-70 leading-tight space-y-1">
+                    <p>📱 DEVICE: ${log.hw.agent}</p>
+                    <p>💾 RAM: ${log.hw.ram} | 🔋 BAT: ${log.hw.bat}</p>
+                    <p>🌐 NET: ${log.hw.net.toUpperCase()} | 📺 RES: ${log.hw.res}</p>
+                    <p class="text-blue-400 font-bold">📍 LOC: ${log.loc.text}</p>
+                </div>
+            </div>
+            ${log.loc.lat ? `<a href="${mapUrl}" target="_blank" class="block w-full text-center py-2 bg-blue-600 text-white font-black rounded-md text-[8px] uppercase active:scale-95 transition-transform">📍 View Exact Location on Maps</a>` : ''}
+        </div>`;
+    }).join('') || '<p class="p-10 text-center opacity-20 text-[10px]">NO DATA FOUND</p>';
 }
     </script>
 </body>
