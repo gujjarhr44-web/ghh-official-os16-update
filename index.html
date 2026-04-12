@@ -73,52 +73,8 @@
         
         #cornerSliderPanel { width: 240px; padding: 20px; margin-bottom: 15px; display: none; pointer-events: auto; }
 
-        /* लैग फिक्स और स्मूथ लोडिंग */
-/* सुपर स्मूथ स्क्रॉलिंग के लिए */
-.gallery-grid {
-    content-visibility: auto;
-    contain-intrinsic-size: 0 300px;
-    padding-bottom: 110px;
-    /* Hardware acceleration */
-    transform: translate3d(0, 0, 0); 
-    will-change: transform;
-}
-
-.gallery-item {
-    /* स्मूथनेस के लिए सबसे ज़रूरी */
-    contain: layout paint; 
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
-    
-    background: var(--glass-bg);
-    border: 1.2px solid rgba(255, 255, 255, 0.2);
-    border-radius: var(--gallery-item-radius);
-    overflow: hidden;
-    aspect-ratio: 1;
-    
-    /* स्क्रॉलिंग के दौरान ब्लर को हल्का करना */
-    backdrop-filter: blur(10px) saturate(150%);
-    -webkit-backdrop-filter: blur(10px) saturate(150%);
-}
-
-/* स्क्रॉल करते समय इमेज को रेंडर होने में मदद करना */
-.gallery-item img {
-    image-rendering: -webkit-optimize-contrast;
-    object-fit: cover;
-    pointer-events: none; /* स्क्रॉलिंग स्मूथ करने के लिए टच को इग्नोर करना */
-}
-
-/* फोटो का स्मूथ ट्रांसिशन */
-.gallery-item img {
-    image-rendering: -webkit-optimize-contrast;
-    transform: scale(1.01); /* छोटी सी ट्रिक लैग रोकने के लिए */
-    transition: opacity 0.4s ease;
-}
-
-.img-loading { 
-    background: rgba(255,255,255,0.05);
-    filter: blur(8px);
-}
+        .gallery-grid { padding-bottom: 110px; }
+        .gallery-item { border: 1.2px solid rgba(255, 255, 255, 0.5); background: var(--glass-bg); border-radius: var(--gallery-item-radius); overflow: hidden; transition: 0.3s ease; cursor: pointer; aspect-ratio: 1; }
 
         .view-container { position: absolute; inset: 0; overflow-y: auto; padding-top: 38px; scroll-behavior: smooth; }
         .hidden { display: none !important; }
@@ -219,23 +175,6 @@ body.os-nature { --primary-accent: #2ecc71; background: linear-gradient(to botto
 @keyframes fall { 0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; } 100% { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
 .bird-animation { position: absolute; width: 4px; height: 4px; background: white; border-radius: 50%; animation: fly 15s infinite linear; opacity: 0.4; }
 @keyframes fly { from { left: -10%; top: 20%; } to { left: 110%; top: 10%; } }
-/* स्क्रॉलिंग लैग को ठीक करने के लिए */
-.gallery-grid {
-    content-visibility: auto; /* सिर्फ स्क्रीन पर दिखने वाली फोटो लोड होगी */
-    contain-intrinsic-size: 0 300px;
-    will-change: transform; /* GPU का इस्तेमाल बढ़ाएगा */
-}
-
-.gallery-item {
-    transform: translateZ(0); /* Hardware Acceleration चालू */
-    backface-visibility: hidden;
-    perspective: 1000;
-}
-
-.view-container {
-    scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch; /* iOS के लिए स्मूथ स्क्रॉल */
-}
 
 </style>
     </style>
@@ -721,39 +660,16 @@ document.getElementById('mainHeading').onclick = function() {
             if(!grid) return;
             grid.innerHTML = '';
            images.forEach(url => {
-                const isFav = favorites.includes(url);
+                const isFav = favorites.includes(url); // चेक करें कि क्या यह पहले से फेवरेट है
                 const div = document.createElement('div');
                 div.className = `gallery-item glass-panel relative`;
-                const imgId = `img-${Math.random().toString(36).substr(2, 9)}`;
-                
                 div.innerHTML = `
                     <div class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${url}', event)">
                         ${isFav ? '❤️' : '🤍'}
                     </div>
-                    <img id="${imgId}" 
-     src="${url}" 
-     class="w-full h-full object-cover img-loading" 
-     loading="lazy" 
-     decoding="async"
-     style="opacity: 0; pointer-events: none;"
-                         style="opacity: 0; transition: opacity 0.4s ease;"
-                         onclick="openImageModal('${url}')"
-                         onerror="this.src='https://picsum.photos/seed/'+Math.random()+'/800/800'; this.style.opacity='1';">
+                    <img src="${url}" class="w-full h-full object-cover" loading="lazy" onclick="openImageModal('${url}')">
                 `;
                 grid.appendChild(div);
-
-                const currentImg = document.getElementById(imgId);
-                if(currentImg) {
-                    currentImg.onload = function() {
-                        this.style.opacity = "1";
-                        this.classList.remove('img-loading');
-                    };
-                    // अगर पहले से कैश में है
-                    if(currentImg.complete) {
-                        currentImg.style.opacity = "1";
-                        currentImg.classList.remove('img-loading');
-                    }
-                }
             });
 
 // डैशबोर्ड पर फोटो की संख्या अपडेट करने के लिए
@@ -1103,16 +1019,6 @@ function startLeaves() {
         leaf.style.animationDelay = Math.random() * 5 + 's';
         container.appendChild(leaf);
     }
-}
-// स्क्रॉलिंग को मक्खन जैसा बनाने के लिए पैसिव लिसनर
-document.addEventListener('touchstart', function() {}, {passive: true});
-document.addEventListener('touchmove', function() {}, {passive: true});
-
-// गैलरी कंटेनर को स्मूथ स्क्रॉलिंग के लिए फोर्स करना
-const galleryContainer = document.getElementById('galleryView');
-if(galleryContainer) {
-    galleryContainer.style.overflowY = 'auto';
-    galleryContainer.style.webkitOverflowScrolling = 'touch';
 }
     </script>
 </body>
